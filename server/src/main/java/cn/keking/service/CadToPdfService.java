@@ -4,40 +4,47 @@ import cn.keking.config.ConfigConstants;
 import cn.keking.model.FileAttribute;
 import cn.keking.utils.FileConvertStatusManager;
 import cn.keking.utils.RemoveSvgAdSimple;
-import com.aspose.cad.*;
-import com.aspose.cad.fileformats.cad.CadDrawTypeMode;
-import com.aspose.cad.fileformats.tiff.enums.TiffExpectedFormat;
-import com.aspose.cad.imageoptions.*;
 import jakarta.annotation.PreDestroy;
 import org.jodconverter.core.util.OSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
- * CAD文件转换服务 - 精简版
- * 支持实时状态跟踪和状态锁定机制
+ * CAD文件转换服务
+ * 使用反射调用 Aspose CAD，使默认构建不再被私有仓库依赖阻塞。
  */
 @Component
 public class CadToPdfService {
     private static final Logger logger = LoggerFactory.getLogger(CadToPdfService.class);
+    private static final AsposeCadBridge ASPOSE_CAD = AsposeCadBridge.load();
 
-    // 使用虚拟线程执行器
     private final ExecutorService virtualThreadExecutor;
-    // 存储正在运行的转换任务
     private final ConcurrentHashMap<String, Future<?>> runningTasks = new ConcurrentHashMap<>();
-    // 存储任务的完成状态
     private final ConcurrentHashMap<String, AtomicBoolean> taskCompletionStatus = new ConcurrentHashMap<>();
-    // 并发控制信号量
     private final Semaphore concurrentLimit;
-    // 转换超时时间（秒）
     private final long conversionTimeout;
 
     public CadToPdfService() {
@@ -47,6 +54,14 @@ public class CadToPdfService {
         this.conversionTimeout = getConversionTimeout();
 
         logger.info("CAD转换服务初始化完成，最大并发数: {}，转换超时: {}秒", maxConcurrent, conversionTimeout);
+    }
+
+    public boolean isAsposeCadAvailable() {
+        return ASPOSE_CAD.isAvailable();
+    }
+
+    public String getAsposeCadAvailabilityMessage() {
+        return ASPOSE_CAD.getAvailabilityMessage();
     }
 
     /**
@@ -69,9 +84,6 @@ public class CadToPdfService {
                 false);
     }
 
-    /**
-     * 通用的转换任务提交方法
-     */
     private CompletableFuture<Boolean> submitConversionTask(String cacheName, String outputFilePath,
                                                             Supplier<Boolean> conversionSupplier,
                                                             boolean deleteOnTimeout) {
@@ -101,13 +113,9 @@ public class CadToPdfService {
 
         runningTasks.put(cacheName, future);
         scheduleTimeoutCheck(cacheName, taskFuture, future, outputFilePath, deleteOnTimeout);
-
         return taskFuture;
     }
 
-    /**
-     * 调度超时检查
-     */
     private void scheduleTimeoutCheck(String fileName, CompletableFuture<Boolean> taskFuture,
                                       Future<?> future, String outputFilePath, boolean deleteOnTimeout) {
         virtualThreadExecutor.submit(() -> {
@@ -121,9 +129,6 @@ public class CadToPdfService {
         });
     }
 
-    /**
-     * 处理转换超时
-     */
     private void handleConversionTimeout(String fileName, CompletableFuture<Boolean> taskFuture,
                                          Future<?> future, String outputFilePath, boolean deleteOnTimeout) {
         logger.error("CAD转换超时，取消任务: {}, 超时时间: {}秒", fileName, conversionTimeout);
@@ -135,50 +140,45 @@ public class CadToPdfService {
         taskFuture.complete(false);
     }
 
-    /**
-     * 处理转换异常
-     */
     private void handleConversionException(String fileName, CompletableFuture<Boolean> taskFuture, Exception e) {
         logger.error("CAD转换异常: {}", fileName, e);
         FileConvertStatusManager.markError(fileName, "转换任务异常: " + e.getMessage());
         taskFuture.complete(false);
     }
 
-    /**
-     * 执行实际的CAD转换逻辑
-     */
     private boolean performCadConversion(String inputFilePath, String outputFilePath, String cacheName,
                                          String cadPreviewType, FileAttribute fileAttribute) {
         return executeWithConcurrencyControl(cacheName, () -> {
-            long totalStartTime = System.currentTimeMillis();
             try {
                 if (!validateInputParameters(inputFilePath, outputFilePath, cadPreviewType)) {
                     FileConvertStatusManager.markError(cacheName, "文件参数验证失败");
                     return false;
                 }
+                ASPOSE_CAD.ensureAvailable();
 
                 FileConvertStatusManager.updateProgress(cacheName, "正在准备输出目录", 30);
                 createOutputDirectoryIfNeeded(outputFilePath, fileAttribute.isCompressFile());
 
                 FileConvertStatusManager.updateProgress(cacheName, "正在加载CAD文件", 40);
-                try (Image cadImage = Image.load(inputFilePath, createLoadOptions())) {
+                Object cadImage = ASPOSE_CAD.loadImage(inputFilePath);
+                try {
                     FileConvertStatusManager.updateProgress(cacheName, "CAD文件加载完成，开始渲染", 50);
-
-                    CadRasterizationOptions rasterizationOptions = createRasterizationOptions(cadImage);
-                    Object options = createConversionOptions(cadPreviewType, rasterizationOptions);
+                    Object rasterizationOptions = ASPOSE_CAD.createRasterizationOptions(cadImage);
+                    Object options = ASPOSE_CAD.createConversionOptions(cadPreviewType, rasterizationOptions);
 
                     FileConvertStatusManager.updateProgress(cacheName, "正在生成输出文件", 80);
-                    saveConvertedFile(outputFilePath, cadImage, options);
+                    ASPOSE_CAD.save(outputFilePath, cadImage, options);
 
                     FileConvertStatusManager.updateProgress(cacheName, "文件转换完成", 90);
-
                     if ("svg".equalsIgnoreCase(cadPreviewType) && ConfigConstants.getCadwatermark()) {
-                       // postProcessSvgFile(outputFilePath);
+                        postProcessSvgFile(outputFilePath);
                     }
 
                     FileConvertStatusManager.updateProgress(cacheName, "转换成功", 100);
                     FileConvertStatusManager.convertSuccess(cacheName);
                     return true;
+                } finally {
+                    ASPOSE_CAD.close(cadImage);
                 }
             } catch (Exception e) {
                 logger.error("CAD转换执行失败: {}", cacheName, e);
@@ -189,9 +189,6 @@ public class CadToPdfService {
         }, "正在启动转换", "已获取转换资源，开始转换");
     }
 
-    /**
-     * 执行外部CAD转换器转换
-     */
     private boolean executeCadViewerConversion(String sDwgFile, String outFilePath, String cachefilepath,
                                                String cadPreviewType, String cacheName) {
         return executeWithConcurrencyControl(cacheName, () -> {
@@ -211,10 +208,10 @@ public class CadToPdfService {
                     FileConvertStatusManager.updateProgress(cacheName, "转换成功", 100);
                     FileConvertStatusManager.convertSuccess(cacheName);
                     return true;
-                } else {
-                    FileConvertStatusManager.markError(cacheName, "外部转换失败: " + result);
-                    return false;
                 }
+
+                FileConvertStatusManager.markError(cacheName, "外部转换失败: " + result);
+                return false;
             } catch (Exception e) {
                 logger.error("外部CAD转换执行失败: {}", cacheName, e);
                 FileConvertStatusManager.markError(cacheName, "外部转换失败: " + e.getMessage());
@@ -223,12 +220,10 @@ public class CadToPdfService {
         }, "正在启动外部CAD转换", "已获取转换资源，开始外部转换");
     }
 
-    /**
-     * 带并发控制的执行方法
-     */
     private boolean executeWithConcurrencyControl(String cacheName, Supplier<Boolean> task,
                                                   String startMessage, String acquiredMessage) {
         try {
+            FileConvertStatusManager.updateProgress(cacheName, startMessage, 10);
             if (!concurrentLimit.tryAcquire(30, TimeUnit.SECONDS)) {
                 FileConvertStatusManager.updateProgress(cacheName, "系统繁忙，等待资源中...", 15);
                 throw new TimeoutException("系统繁忙，请稍后重试");
@@ -247,21 +242,6 @@ public class CadToPdfService {
         }
     }
 
-    /**
-     * 创建转换选项
-     */
-    private Object createConversionOptions(String cadPreviewType, CadRasterizationOptions rasterizationOptions) {
-        return switch (cadPreviewType.toLowerCase()) {
-            case "svg" -> createSvgOptions(rasterizationOptions);
-            case "pdf" -> createPdfOptions(rasterizationOptions);
-            case "tif", "tiff" -> createTiffOptions(rasterizationOptions);
-            default -> throw new IllegalArgumentException("不支持的预览类型: " + cadPreviewType);
-        };
-    }
-
-    /**
-     * 执行外部CAD转换器
-     */
     private String executeExternalCadViewer(String sDwgFile, String outFilePath, String cachefilepath,
                                             String cadPreviewType, String cacheName) throws Exception {
         boolean isWindows = OSUtils.IS_OS_WINDOWS;
@@ -288,9 +268,6 @@ public class CadToPdfService {
         }
     }
 
-    /**
-     * 构建外部命令
-     */
     private List<String> buildExternalCommand(String sDwgFile, String outFilePath, String cachefilepath,
                                               String cadPreviewType, String cacheName, boolean isWindows) {
         List<String> command = new ArrayList<>();
@@ -305,8 +282,6 @@ public class CadToPdfService {
         return command;
     }
 
-    // ============== 工具方法 ==============
-
     private boolean validateInputParameters(String inputFilePath, String outputFilePath, String cadPreviewType) {
         if (inputFilePath == null || inputFilePath.trim().isEmpty() || outputFilePath == null || outputFilePath.trim().isEmpty()) {
             return false;
@@ -316,7 +291,10 @@ public class CadToPdfService {
     }
 
     private boolean isSupportedPreviewType(String previewType) {
-        return switch (previewType.toLowerCase()) {
+        if (previewType == null) {
+            return false;
+        }
+        return switch (previewType.toLowerCase(Locale.ROOT)) {
             case "svg", "pdf", "tif", "tiff" -> true;
             default -> false;
         };
@@ -335,63 +313,6 @@ public class CadToPdfService {
     private void createDirectory(File dir) {
         if (dir != null && !dir.exists() && !dir.mkdirs()) {
             throw new RuntimeException("无法创建输出目录: " + dir.getAbsolutePath());
-        }
-    }
-
-    private LoadOptions createLoadOptions() {
-        LoadOptions opts = new LoadOptions();
-        opts.setSpecifiedEncoding(CodePages.SimpChinese);
-        return opts;
-    }
-
-    private CadRasterizationOptions createRasterizationOptions(Image cadImage) {
-        RasterizationQuality quality = new RasterizationQuality();
-        RasterizationQualityValue highQuality = RasterizationQualityValue.High;
-        quality.setArc(highQuality);
-        quality.setHatch(highQuality);
-        quality.setText(highQuality);
-        quality.setOle(highQuality);
-        quality.setObjectsPrecision(highQuality);
-        quality.setTextThicknessNormalization(true);
-
-        CadRasterizationOptions options = new CadRasterizationOptions();
-        options.setBackgroundColor(Color.getWhite());
-        options.setPageWidth(cadImage.getWidth());
-        options.setPageHeight(cadImage.getHeight());
-        options.setUnitType(cadImage.getUnitType());
-        options.setAutomaticLayoutsScaling(false);
-        options.setNoScaling(false);
-        options.setQuality(quality);
-        options.setDrawType(CadDrawTypeMode.UseObjectColor);
-        options.setExportAllLayoutContent(true);
-        options.setVisibilityMode(VisibilityMode.AsScreen);
-        return options;
-    }
-
-    private SvgOptions createSvgOptions(CadRasterizationOptions rasterizationOptions) {
-        SvgOptions options = new SvgOptions();
-        options.setVectorRasterizationOptions(rasterizationOptions);
-        return options;
-    }
-
-    private PdfOptions createPdfOptions(CadRasterizationOptions rasterizationOptions) {
-        PdfOptions options = new PdfOptions();
-        options.setVectorRasterizationOptions(rasterizationOptions);
-        return options;
-    }
-
-    private TiffOptions createTiffOptions(CadRasterizationOptions rasterizationOptions) {
-        return new TiffOptions(TiffExpectedFormat.TiffJpegRgb);
-    }
-
-    private void saveConvertedFile(String outputFilePath, Image cadImage, Object options) throws IOException {
-        try (OutputStream outputStream = new FileOutputStream(outputFilePath)) {
-            switch (options) {
-                case SvgOptions svgOptions -> cadImage.save(outputStream, svgOptions);
-                case PdfOptions pdfOptions -> cadImage.save(outputStream, pdfOptions);
-                case TiffOptions tiffOptions -> cadImage.save(outputStream, tiffOptions);
-                default -> throw new IllegalArgumentException("不支持的选项类型");
-            }
         }
     }
 
@@ -437,8 +358,6 @@ public class CadToPdfService {
         }
     }
 
-    // ============== 外部进程执行相关方法 ==============
-
     private static String executeProcessWithVirtualThreads(List<String> command, String workingDir, String encoding) throws Exception {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         if (!OSUtils.IS_OS_WINDOWS && !"false".equals(workingDir)) {
@@ -476,8 +395,6 @@ public class CadToPdfService {
         return output.toString();
     }
 
-    // ============== 公共方法 ==============
-
     public void cancelConversion(String fileName) {
         Future<?> future = runningTasks.get(fileName);
         if (future != null && future.cancel(true)) {
@@ -486,8 +403,6 @@ public class CadToPdfService {
             FileConvertStatusManager.markError(fileName, "转换已取消");
         }
     }
-
-
 
     @PreDestroy
     public void shutdown() {
@@ -504,6 +419,219 @@ public class CadToPdfService {
                 Thread.currentThread().interrupt();
                 virtualThreadExecutor.shutdownNow();
             }
+        }
+    }
+
+    private static final class AsposeCadBridge {
+        private static final String ENABLE_HINT = "Aspose CAD 运行时不可用，请使用 -Pwith-aspose-cad 构建，或配置 cad.cadconverterpath 启用外部 CAD 转换器。";
+
+        private final boolean available;
+        private final String availabilityMessage;
+        private final Class<?> imageClass;
+        private final Class<?> loadOptionsClass;
+        private final Class<?> imageOptionsBaseClass;
+        private final Class<?> cadRasterizationOptionsClass;
+        private final Class<?> rasterizationQualityClass;
+        private final Class<?> rasterizationQualityValueClass;
+        private final Class<?> colorClass;
+        private final Class<?> svgOptionsClass;
+        private final Class<?> pdfOptionsClass;
+        private final Class<?> tiffOptionsClass;
+        private final Class<?> tiffExpectedFormatClass;
+        private final Class<?> visibilityModeClass;
+        private final Class<?> cadDrawTypeModeClass;
+        private final Class<?> codePagesClass;
+
+        private AsposeCadBridge(boolean available, String availabilityMessage,
+                                Class<?> imageClass, Class<?> loadOptionsClass, Class<?> imageOptionsBaseClass,
+                                Class<?> cadRasterizationOptionsClass, Class<?> rasterizationQualityClass,
+                                Class<?> rasterizationQualityValueClass, Class<?> colorClass,
+                                Class<?> svgOptionsClass, Class<?> pdfOptionsClass, Class<?> tiffOptionsClass,
+                                Class<?> tiffExpectedFormatClass, Class<?> visibilityModeClass,
+                                Class<?> cadDrawTypeModeClass, Class<?> codePagesClass) {
+            this.available = available;
+            this.availabilityMessage = availabilityMessage;
+            this.imageClass = imageClass;
+            this.loadOptionsClass = loadOptionsClass;
+            this.imageOptionsBaseClass = imageOptionsBaseClass;
+            this.cadRasterizationOptionsClass = cadRasterizationOptionsClass;
+            this.rasterizationQualityClass = rasterizationQualityClass;
+            this.rasterizationQualityValueClass = rasterizationQualityValueClass;
+            this.colorClass = colorClass;
+            this.svgOptionsClass = svgOptionsClass;
+            this.pdfOptionsClass = pdfOptionsClass;
+            this.tiffOptionsClass = tiffOptionsClass;
+            this.tiffExpectedFormatClass = tiffExpectedFormatClass;
+            this.visibilityModeClass = visibilityModeClass;
+            this.cadDrawTypeModeClass = cadDrawTypeModeClass;
+            this.codePagesClass = codePagesClass;
+        }
+
+        static AsposeCadBridge load() {
+            try {
+                return new AsposeCadBridge(
+                        true,
+                        "Aspose CAD 运行时可用",
+                        Class.forName("com.aspose.cad.Image"),
+                        Class.forName("com.aspose.cad.LoadOptions"),
+                        Class.forName("com.aspose.cad.imageoptions.ImageOptionsBase"),
+                        Class.forName("com.aspose.cad.imageoptions.CadRasterizationOptions"),
+                        Class.forName("com.aspose.cad.imageoptions.RasterizationQuality"),
+                        Class.forName("com.aspose.cad.imageoptions.RasterizationQualityValue"),
+                        Class.forName("com.aspose.cad.Color"),
+                        Class.forName("com.aspose.cad.imageoptions.SvgOptions"),
+                        Class.forName("com.aspose.cad.imageoptions.PdfOptions"),
+                        Class.forName("com.aspose.cad.imageoptions.TiffOptions"),
+                        Class.forName("com.aspose.cad.fileformats.tiff.enums.TiffExpectedFormat"),
+                        Class.forName("com.aspose.cad.imageoptions.VisibilityMode"),
+                        Class.forName("com.aspose.cad.fileformats.cad.CadDrawTypeMode"),
+                        Class.forName("com.aspose.cad.CodePages"));
+            } catch (ClassNotFoundException e) {
+                logger.warn(ENABLE_HINT);
+                return new AsposeCadBridge(false, ENABLE_HINT, null, null, null, null, null, null, null,
+                        null, null, null, null, null, null, null);
+            }
+        }
+
+        boolean isAvailable() {
+            return available;
+        }
+
+        String getAvailabilityMessage() {
+            return availabilityMessage;
+        }
+
+        void ensureAvailable() {
+            if (!available) {
+                throw new IllegalStateException(availabilityMessage);
+            }
+        }
+
+        Object loadImage(String inputFilePath) {
+            ensureAvailable();
+            try {
+                Object loadOptions = loadOptionsClass.getDeclaredConstructor().newInstance();
+                invoke(loadOptions, "setSpecifiedEncoding", codePagesClass, enumConstant(codePagesClass, "SimpChinese"));
+                return invokeStatic(imageClass, "load", new Class<?>[]{String.class, loadOptionsClass}, inputFilePath, loadOptions);
+            } catch (ReflectiveOperationException e) {
+                throw wrap("加载 Aspose CAD 文件失败", e);
+            }
+        }
+
+        Object createRasterizationOptions(Object cadImage) {
+            try {
+                Object quality = rasterizationQualityClass.getDeclaredConstructor().newInstance();
+                Object highQuality = enumConstant(rasterizationQualityValueClass, "High");
+                invoke(quality, "setArc", rasterizationQualityValueClass, highQuality);
+                invoke(quality, "setHatch", rasterizationQualityValueClass, highQuality);
+                invoke(quality, "setText", rasterizationQualityValueClass, highQuality);
+                invoke(quality, "setOle", rasterizationQualityValueClass, highQuality);
+                invoke(quality, "setObjectsPrecision", rasterizationQualityValueClass, highQuality);
+                invoke(quality, "setTextThicknessNormalization", boolean.class, true);
+
+                Object options = cadRasterizationOptionsClass.getDeclaredConstructor().newInstance();
+                Object white = invokeStatic(colorClass, "getWhite", new Class<?>[0]);
+                invoke(options, "setBackgroundColor", colorClass, white);
+                invoke(options, "setPageWidth", int.class, ((Number) invoke(cadImage, "getWidth")).intValue());
+                invoke(options, "setPageHeight", int.class, ((Number) invoke(cadImage, "getHeight")).intValue());
+                invoke(options, "setUnitType", invoke(cadImage, "getUnitType").getClass(), invoke(cadImage, "getUnitType"));
+                invoke(options, "setAutomaticLayoutsScaling", boolean.class, false);
+                invoke(options, "setNoScaling", boolean.class, false);
+                invoke(options, "setQuality", rasterizationQualityClass, quality);
+                invoke(options, "setDrawType", cadDrawTypeModeClass, enumConstant(cadDrawTypeModeClass, "UseObjectColor"));
+                invoke(options, "setExportAllLayoutContent", boolean.class, true);
+                invoke(options, "setVisibilityMode", visibilityModeClass, enumConstant(visibilityModeClass, "AsScreen"));
+                return options;
+            } catch (ReflectiveOperationException e) {
+                throw wrap("创建 Aspose CAD 渲染选项失败", e);
+            }
+        }
+
+        Object createConversionOptions(String cadPreviewType, Object rasterizationOptions) {
+            try {
+                return switch (cadPreviewType.toLowerCase(Locale.ROOT)) {
+                    case "svg" -> createVectorOptions(svgOptionsClass, rasterizationOptions);
+                    case "pdf" -> createVectorOptions(pdfOptionsClass, rasterizationOptions);
+                    case "tif", "tiff" -> createTiffOptions(rasterizationOptions);
+                    default -> throw new IllegalArgumentException("不支持的预览类型: " + cadPreviewType);
+                };
+            } catch (ReflectiveOperationException e) {
+                throw wrap("创建 Aspose CAD 输出选项失败", e);
+            }
+        }
+
+        void save(String outputFilePath, Object cadImage, Object options) {
+            try (OutputStream outputStream = new FileOutputStream(outputFilePath)) {
+                invoke(cadImage, "save", new Class<?>[]{OutputStream.class, imageOptionsBaseClass}, outputStream, options);
+            } catch (IOException | ReflectiveOperationException e) {
+                throw wrap("保存 Aspose CAD 输出文件失败", e);
+            }
+        }
+
+        void close(Object cadImage) {
+            if (cadImage == null) {
+                return;
+            }
+            try {
+                invoke(cadImage, "close");
+            } catch (ReflectiveOperationException e) {
+                logger.debug("关闭 Aspose CAD 资源失败", e);
+            }
+        }
+
+        private Object createVectorOptions(Class<?> optionsClass, Object rasterizationOptions) throws ReflectiveOperationException {
+            Object options = optionsClass.getDeclaredConstructor().newInstance();
+            invoke(options, "setVectorRasterizationOptions", cadRasterizationOptionsClass, rasterizationOptions);
+            return options;
+        }
+
+        private Object createTiffOptions(Object rasterizationOptions) throws ReflectiveOperationException {
+            Object tiffOptions = tiffOptionsClass
+                    .getDeclaredConstructor(tiffExpectedFormatClass)
+                    .newInstance(enumConstant(tiffExpectedFormatClass, "TiffJpegRgb"));
+            invokeOptional(tiffOptions, "setVectorRasterizationOptions", cadRasterizationOptionsClass, rasterizationOptions);
+            return tiffOptions;
+        }
+
+        private static RuntimeException wrap(String message, Exception e) {
+            Throwable cause = e instanceof InvocationTargetException invocationTargetException
+                    ? invocationTargetException.getTargetException()
+                    : e;
+            return new IllegalStateException(message + ": " + cause.getMessage(), cause);
+        }
+
+        private static Object invokeStatic(Class<?> type, String methodName, Class<?>[] parameterTypes, Object... args)
+                throws ReflectiveOperationException {
+            return type.getMethod(methodName, parameterTypes).invoke(null, args);
+        }
+
+        private static Object invoke(Object target, String methodName) throws ReflectiveOperationException {
+            return target.getClass().getMethod(methodName).invoke(target);
+        }
+
+        private static Object invoke(Object target, String methodName, Class<?> parameterType, Object arg)
+                throws ReflectiveOperationException {
+            return target.getClass().getMethod(methodName, parameterType).invoke(target, arg);
+        }
+
+        private static Object invoke(Object target, String methodName, Class<?>[] parameterTypes, Object... args)
+                throws ReflectiveOperationException {
+            return target.getClass().getMethod(methodName, parameterTypes).invoke(target, args);
+        }
+
+        private static void invokeOptional(Object target, String methodName, Class<?> parameterType, Object arg)
+                throws ReflectiveOperationException {
+            try {
+                invoke(target, methodName, parameterType, arg);
+            } catch (NoSuchMethodException ignored) {
+                // Older Aspose variants may not expose this hook for TIFF options.
+            }
+        }
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private static Object enumConstant(Class<?> enumType, String name) {
+            Class<? extends Enum> typedEnum = enumType.asSubclass(Enum.class);
+            return Enum.valueOf(typedEnum, name);
         }
     }
 }

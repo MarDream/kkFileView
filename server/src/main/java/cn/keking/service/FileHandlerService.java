@@ -19,7 +19,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -137,27 +141,44 @@ public class FileHandlerService {
      */
     public void doActionConvertedFile(String outFilePath) {
         String charset = EncodingDetects.getJavaEncode(outFilePath);
-        StringBuilder sb = new StringBuilder();
-        try (InputStream inputStream = new FileInputStream(outFilePath); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
-            String line;
-            while (null != (line = reader.readLine())) {
-                if (line.contains("charset=gb2312")) {
-                    line = line.replace("charset=gb2312", "charset=utf-8");
+        Path sourcePath = Path.of(outFilePath);
+        Path tempPath = null;
+        boolean hasExcelHeader = false;
+
+        try {
+            tempPath = Files.createTempFile(sourcePath.getParent(), "kkfv-html-", ".tmp");
+            try (BufferedReader reader = Files.newBufferedReader(sourcePath, Charset.forName(charset));
+                 BufferedWriter writer = Files.newBufferedWriter(tempPath, StandardCharsets.UTF_8)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("charset=gb2312")) {
+                        line = line.replace("charset=gb2312", "charset=utf-8");
+                    }
+                    if (!hasExcelHeader && line.contains("excel.header.js")) {
+                        hasExcelHeader = true;
+                    }
+                    writer.write(line);
+                    writer.newLine();
                 }
-                sb.append(line);
+                if (!hasExcelHeader) {
+                    writer.write("<script src=\"js/jquery-3.6.1.min.js\" type=\"text/javascript\"></script>");
+                    writer.newLine();
+                    writer.write("<script src=\"excel/excel.header.js\" type=\"text/javascript\"></script>");
+                    writer.newLine();
+                    writer.write("<link rel=\"stylesheet\" href=\"excel/excel.css\">");
+                    writer.newLine();
+                }
             }
-            // 添加sheet控制头
-            sb.append("<script src=\"js/jquery-3.6.1.min.js\" type=\"text/javascript\"></script>");
-            sb.append("<script src=\"excel/excel.header.js\" type=\"text/javascript\"></script>");
-            sb.append("<link rel=\"stylesheet\" href=\"excel/excel.css\">");
+            Files.move(tempPath, sourcePath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            logger.error("Failed to read file: {}", outFilePath, e);
-        }
-        // 重新写入文件
-        try (FileOutputStream fos = new FileOutputStream(outFilePath); BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
-            writer.write(sb.toString());
-        } catch (IOException e) {
-            logger.error("Failed to write file: {}", outFilePath, e);
+            logger.error("Failed to rewrite converted html file: {}", outFilePath, e);
+            if (tempPath != null) {
+                try {
+                    Files.deleteIfExists(tempPath);
+                } catch (IOException deleteException) {
+                    logger.warn("Failed to clean temp html file: {}", tempPath, deleteException);
+                }
+            }
         }
     }
 

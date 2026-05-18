@@ -86,7 +86,7 @@ public class OfficePluginManager {
         boolean flag = false;
         try {
             if (OSUtils.IS_OS_WINDOWS) {
-                Process p = Runtime.getRuntime().exec("cmd /c tasklist ");
+                Process p = new ProcessBuilder("cmd", "/c", "tasklist").start();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 InputStream os = p.getInputStream();
                 byte[] b = new byte[256];
@@ -95,7 +95,7 @@ public class OfficePluginManager {
                 }
                 String s = baos.toString();
                 if (s.contains("soffice.bin")) {
-                    Runtime.getRuntime().exec("taskkill /im " + "soffice.bin" + " /f");
+                    new ProcessBuilder("taskkill", "/im", "soffice.bin", "/f").start();
                     flag = true;
                 }
             } else if (OSUtils.IS_OS_MAC || OSUtils.IS_OS_MAC_OSX) {

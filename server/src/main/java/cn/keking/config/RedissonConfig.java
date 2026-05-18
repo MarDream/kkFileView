@@ -3,13 +3,17 @@ package cn.keking.config;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.config.BaseConfig;
 import org.redisson.client.codec.Codec;
+import org.redisson.config.ConstantDelay;
 import org.redisson.config.Config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.ClassUtils;
+
+import java.time.Duration;
 
 /**
  * Redisson 客户端配置（完善版）
@@ -58,6 +62,9 @@ public class RedissonConfig {
 
         // 密码处理：空字符串转为 null
         String pwd = StringUtils.isBlank(password) ? null : password;
+        if (pwd != null) {
+            config.setPassword(pwd);
+        }
 
         // 根据模式构建配置
         switch (mode.toLowerCase()) {
@@ -84,7 +91,7 @@ public class RedissonConfig {
 
     private void configureSingleMode(Config config, String pwd) {
         String normalizedAddress = normalizeAddress(address);
-        config.useSingleServer()
+        applyBaseServerConfig(config.useSingleServer()
                 .setAddress(normalizedAddress)
                 .setConnectionMinimumIdleSize(connectionMinimumIdleSize)
                 .setConnectionPoolSize(connectionPoolSize)
@@ -93,32 +100,20 @@ public class RedissonConfig {
                 .setSubscriptionConnectionMinimumIdleSize(subscriptionConnectionMinimumIdleSize)
                 .setSubscriptionConnectionPoolSize(subscriptionConnectionPoolSize)
                 .setSubscriptionsPerConnection(subscriptionsPerConnection)
-                .setClientName(clientName)
-                .setRetryAttempts(retryAttempts)
-                .setRetryInterval(retryInterval)
-                .setTimeout(timeout)
-                .setConnectTimeout(connectTimeout)
-                .setIdleConnectionTimeout(idleConnectionTimeout)
-                .setPassword(pwd);
+                .setClientName(clientName), pwd);
     }
 
     private void configureClusterMode(Config config, String pwd) {
         String[] nodeAddresses = normalizeAddresses(address.split(","));
-        config.useClusterServers()
+        applyBaseServerConfig(config.useClusterServers()
                 .setScanInterval(scanInterval)
                 .addNodeAddress(nodeAddresses)
-                .setPassword(pwd)
-                .setRetryAttempts(retryAttempts)
-                .setRetryInterval(retryInterval)
-                .setTimeout(timeout)
-                .setConnectTimeout(connectTimeout)
-                .setIdleConnectionTimeout(idleConnectionTimeout)
                 .setMasterConnectionPoolSize(connectionPoolSize)
                 .setSlaveConnectionPoolSize(connectionPoolSize)
                 .setSubscriptionConnectionPoolSize(subscriptionConnectionPoolSize)
                 .setSubscriptionConnectionMinimumIdleSize(subscriptionConnectionMinimumIdleSize)
                 .setSubscriptionsPerConnection(subscriptionsPerConnection)
-                .setClientName(clientName);
+                .setClientName(clientName), pwd);
     }
 
     private void configureMasterSlaveMode(Config config, String pwd) {
@@ -129,41 +124,38 @@ public class RedissonConfig {
         String[] slaveAddresses = new String[normalizedAddresses.length - 1];
         System.arraycopy(normalizedAddresses, 1, slaveAddresses, 0, slaveAddresses.length);
 
-        config.useMasterSlaveServers()
+        applyBaseServerConfig(config.useMasterSlaveServers()
                 .setDatabase(database)
-                .setPassword(pwd)
                 .setMasterAddress(masterAddress)
                 .addSlaveAddress(slaveAddresses)
-                .setRetryAttempts(retryAttempts)
-                .setRetryInterval(retryInterval)
-                .setTimeout(timeout)
-                .setConnectTimeout(connectTimeout)
-                .setIdleConnectionTimeout(idleConnectionTimeout)
                 .setMasterConnectionPoolSize(connectionPoolSize)
                 .setSlaveConnectionPoolSize(connectionPoolSize)
                 .setSubscriptionConnectionPoolSize(subscriptionConnectionPoolSize)
                 .setSubscriptionConnectionMinimumIdleSize(subscriptionConnectionMinimumIdleSize)
                 .setSubscriptionsPerConnection(subscriptionsPerConnection)
-                .setClientName(clientName);
+                .setClientName(clientName), pwd);
     }
 
     private void configureSentinelMode(Config config, String pwd) {
         String[] sentinelAddresses = normalizeAddresses(address.split(","));
-        config.useSentinelServers()
+        applyBaseServerConfig(config.useSentinelServers()
                 .setDatabase(database)
-                .setPassword(pwd)
                 .setMasterName(masterName)
                 .addSentinelAddress(sentinelAddresses)
-                .setRetryAttempts(retryAttempts)
-                .setRetryInterval(retryInterval)
-                .setTimeout(timeout)
-                .setConnectTimeout(connectTimeout)
-                .setIdleConnectionTimeout(idleConnectionTimeout)
                 .setMasterConnectionPoolSize(connectionPoolSize)
                 .setSlaveConnectionPoolSize(connectionPoolSize)
                 .setSubscriptionConnectionPoolSize(subscriptionConnectionPoolSize)
                 .setSubscriptionConnectionMinimumIdleSize(subscriptionConnectionMinimumIdleSize)
                 .setSubscriptionsPerConnection(subscriptionsPerConnection)
+                .setClientName(clientName), pwd);
+    }
+
+    private void applyBaseServerConfig(BaseConfig<?> baseConfig, String pwd) {
+        baseConfig.setRetryAttempts(retryAttempts)
+                .setRetryDelay(new ConstantDelay(Duration.ofMillis(retryInterval)))
+                .setTimeout(timeout)
+                .setConnectTimeout(connectTimeout)
+                .setIdleConnectionTimeout(idleConnectionTimeout)
                 .setClientName(clientName);
     }
 

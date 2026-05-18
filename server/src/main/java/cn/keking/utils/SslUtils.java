@@ -1,6 +1,7 @@
 package cn.keking.utils;
 
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -37,6 +38,15 @@ public class SslUtils {
     public static HttpClientBuilder configureHttpClientBuilder(HttpClientBuilder builder,
                                                                boolean ignoreSSL,
                                                                boolean enableRedirect) throws Exception {
+        PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder =
+                PoolingHttpClientConnectionManagerBuilder.create()
+                        .setDefaultSocketConfig(SocketConfig.custom()
+                                .setSoTimeout(Timeout.ofSeconds(10))
+                                .build())
+                        .setDefaultConnectionConfig(ConnectionConfig.custom()
+                                .setConnectTimeout(Timeout.ofSeconds(2))
+                                .build());
+
         // 配置SSL
         if (ignoreSSL) {
             // 创建自定义的SSL上下文
@@ -45,27 +55,19 @@ public class SslUtils {
             // 使用SSLConnectionSocketFactoryBuilder构建SSL连接工厂
             DefaultClientTlsStrategy tlsStrategy = new DefaultClientTlsStrategy(
                     sslContext, NoopHostnameVerifier.INSTANCE);
-
-            // 使用连接管理器构建器
-            PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-                    .setTlsSocketStrategy(tlsStrategy)
-                    .setDefaultSocketConfig(SocketConfig.custom()
-                            .setSoTimeout(Timeout.ofSeconds(10))
-                            .build())
-                    .build();
-
-            // 配置连接池参数
-            connectionManager.setMaxTotal(200);
-            connectionManager.setDefaultMaxPerRoute(20);
-
-            builder.setConnectionManager(connectionManager);
+            connectionManagerBuilder.setTlsSocketStrategy(tlsStrategy);
         }
+
+        // 使用统一连接管理器配置连接池参数与连接超时
+        PoolingHttpClientConnectionManager connectionManager = connectionManagerBuilder.build();
+        connectionManager.setMaxTotal(200);
+        connectionManager.setDefaultMaxPerRoute(20);
+        builder.setConnectionManager(connectionManager);
 
         // 配置请求参数
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(Timeout.ofSeconds(10))
                 .setResponseTimeout(Timeout.ofSeconds(72))
-                .setConnectTimeout(Timeout.ofSeconds(2))
                 .setRedirectsEnabled(enableRedirect)
                 .setMaxRedirects(5)
                 .build();

@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -167,10 +168,12 @@ public class WebUtils {
     public static String getFileNameFromURL(String url) {
         if (url.toLowerCase().startsWith("file:")) {
             try {
-                URL urlObj = new URL(url);
+                URL urlObj = URI.create(url).toURL();
                 url = urlObj.getPath().substring(1);
             } catch (MalformedURLException e) {
                 LOGGER.error("Failed to parse file URL: {}", url, e);
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Invalid file URI: {}", url, e);
             }
         }
         // 因为url的参数中可能会存在/的情况，所以直接url.lastIndexOf("/")会有问题
@@ -351,9 +354,10 @@ public class WebUtils {
      */
     public static String getHost(String urlStr) {
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             return url.getHost().toLowerCase();
         } catch (MalformedURLException ignored) {
+        } catch (IllegalArgumentException ignored) {
         }
         return null;
     }

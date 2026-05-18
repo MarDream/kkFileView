@@ -108,7 +108,7 @@ URL：[https://file.kkview.cn](https://file.kkview.cn)
 10. Refined the PDF.js compatibility polyfill to avoid preview errors in compatibility environments
 
 #### Updates
-1. JDK version requirement - Mandatory requirement for JDK 21 or higher
+1. JDK version requirement - Mandatory requirement for JDK 25 or higher
 2. pdf front-end parsing update - Upgraded PDF front-end rendering component
 3. odf front-end parsing update - Upgraded ODF document front-end rendering
 4. 3D model front-end parsing update - Upgraded 3D model viewer

@@ -30,3 +30,4 @@ nbdist/
 
 server/src/main/cache/
 server/src/main/file/
+/.mvn

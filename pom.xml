@@ -10,7 +10,7 @@
 
     <properties>
         <!-- ========== Java 和编译配置 ========== -->
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -27,12 +27,12 @@
         <aspose-cad.version>25.10</aspose-cad.version>
 
         <!-- ========== PDF 处理 ========== -->
-        <pdfbox.version>3.0.6</pdfbox.version>
+        <pdfbox.version>3.0.7</pdfbox.version>
 
         <!-- ========== 图像处理 ========== -->
         <jai-imageio.version>1.4.0</jai-imageio.version>
         <jbig2-imageio.version>3.0.4</jbig2-imageio.version>
-        <commons-imaging.version>1.4.0</commons-imaging.version>
+        <commons-imaging.version>1.0.0-alpha6</commons-imaging.version>
 
         <!-- ========== 视频处理 (JavaCV) ========== -->
         <bytedeco.version>1.5.12</bytedeco.version>
@@ -45,8 +45,8 @@
         <junrar.version>7.5.5</junrar.version>
 
         <!-- ========== 缓存和存储 ========== -->
-        <redisson.version>4.0.0</redisson.version>
-        <rocksdb.version>9.12.1</rocksdb.version>
+        <redisson.version>4.4.0</redisson.version>
+        <rocksdb.version>10.10.1</rocksdb.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 
         <!-- ========== 网络通信 ========== -->
@@ -62,10 +62,10 @@
         <jchardet.version>1.0</jchardet.version>
 
         <!-- ========== 安全相关 ========== -->
-        <bcprov-jdk15on.version>1.79</bcprov-jdk15on.version>
+        <bcprov-jdk18on.version>1.84</bcprov-jdk18on.version>
 
         <!-- ========== 其他工具库 ========== -->
-        <xstream.version>1.4.34</xstream.version>
+        <xstream.version>1.4.21</xstream.version>
         <antlr.version>2.7.7</antlr.version>
         <galimatias.version>0.2.1</galimatias.version>
     </properties>

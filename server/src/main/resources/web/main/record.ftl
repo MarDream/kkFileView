@@ -43,7 +43,7 @@
                 <div class="release-badge-row">
                     <span class="tag highlight">最新版本 v5.0.0</span>
                     <span class="tag brand">发布日期 2026-04-14</span>
-                    <span class="tag warn">JDK 21+ 强制要求</span>
+                    <span class="tag warn">JDK 25+ 强制要求</span>
                     <span class="tag">压缩包工作区预览 / PDF 默认模式</span>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                     <div class="release-meta">
                         <span class="tag brand">2026-04-14</span>
                         <span class="tag highlight">最新稳定版本</span>
-                        <span class="tag warn">升级需 JDK 21+</span>
+                        <span class="tag warn">升级需 JDK 25+</span>
                     </div>
                     <div class="release-columns">
                         <div class="release-group">

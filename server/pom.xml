@@ -23,21 +23,6 @@
         </dependencies>
     </dependencyManagement>
 
-  <repositories>
-
-    <!--  Aspose 仓库，且只启用 releases -->
-    <repository>
-        <id>aspose-maven-repository</id>
-        <url>https://repository.aspose.com/repo</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-
     <dependencies>
         <!-- ========== Spring Boot 框架依赖 ========== -->
         <dependency>
@@ -103,12 +88,6 @@
             <artifactId>fr.opensagres.xdocreport.document</artifactId>
             <version>${xdocreport.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.aspose</groupId>
-            <artifactId>aspose-cad</artifactId>
-            <version>${aspose-cad.version}</version>
-        </dependency>
-
         <!-- ========== PDF处理 ========== -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -294,8 +273,8 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>${bcprov-jdk15on.version}</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bcprov-jdk18on.version}</version>
         </dependency>
         <dependency>
             <groupId>io.mola.galimatias</groupId>
@@ -328,10 +307,25 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <propertiesEncoding>${project.build.sourceEncoding}</propertiesEncoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
                     <parameters>true</parameters>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
+                    <compilerArgs>
+                        <arg>-Xlint:deprecation</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -372,4 +366,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>with-aspose-cad</id>
+            <repositories>
+                <repository>
+                    <id>aspose-maven-repository</id>
+                    <url>https://releases.aspose.com/java/repo/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>com.aspose</groupId>
+                    <artifactId>aspose-cad</artifactId>
+                    <version>${aspose-cad.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

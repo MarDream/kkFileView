@@ -30,8 +30,8 @@ public class ConfigConstants {
     // 一、基础配置常量
     // ==================================================
     public static final String DEFAULT_VALUE = "default";
-    public static final String DEFAULT_SHOW_AES_KEY = "";  // 强制通过环境变量配置
-    public static final String DEFAULT_PASSWORD = "";      // 强制通过环境变量配置
+    public static final String DEFAULT_SHOW_AES_KEY = "false";
+    public static final String DEFAULT_PASSWORD = "false";
     public static final String DEFAULT_SIZE = "500MB";
     public static final String DEFAULT_ENABLE_REFRECSHSCHEDULE = "5";
     public static final String DEFAULT_IS_JAVASCRIPT = "false";
@@ -39,7 +39,7 @@ public class ConfigConstants {
     public static final String DEFAULT_XLSX_SHOW_TOOLBAR = "false";
     public static final String DEFAULT_IS_SHOW_KEY = "false";
     public static final String DEFAULT_SCRIPT_JS = "false";
-    public static final String DEFAULT_AES_KEY = "";       // 强制通过环境变量配置
+    public static final String DEFAULT_AES_KEY = "false";
 
     // ==================================================
     // 二、缓存配置常量
@@ -139,11 +139,10 @@ public class ConfigConstants {
     public static final String DEFAULT_PICTURES_PREVIEW = "true";
     public static final String DEFAULT_GET_CORS_FILE = "true";
     public static final String DEFAULT_ADD_TASK = "true";
-    public static final String DEFAULT_AES_KEY = "false";
     public static final String DEFAULT_USER_AGENT = "false";
     public static final String DEFAULT_BASIC_NAME = "";
-    public static final String DEFAULT_IGNORE_SSL = "true";
-    public static final String DEFAULT_ENABLE_REDIRECT = "true";
+    public static final String DEFAULT_IGNORE_SSL = "false";
+    public static final String DEFAULT_ENABLE_REDIRECT = "false";
 
     // ==================================================
     // 十一、媒体文件处理配置常量
@@ -728,12 +727,10 @@ public class ConfigConstants {
     public void setSize(String size) { setSizeValue(size); }
     public static void setSizeValue(String size) { ConfigConstants.size = size; }
 
-    @Value("${delete.password}")
+    @Value("${delete.password:false}")
     public void setPassword(String password) {
-        if (password == null || password.trim().isEmpty()) {
-            throw new IllegalStateException("delete.password 必须通过环境变量 KK_DELETE_PASSWORD 配置，禁止为空");
-        }
-        setPasswordValue(password);
+        String normalizedPassword = password == null ? DEFAULT_PASSWORD : password.trim();
+        setPasswordValue(normalizedPassword.isEmpty() ? DEFAULT_PASSWORD : normalizedPassword);
     }
     public static void setPasswordValue(String password) { ConfigConstants.password = password; }
 
@@ -787,15 +784,17 @@ public class ConfigConstants {
     public void setAddTask(String addTask) { setAddTaskValue(Boolean.parseBoolean(addTask)); }
     public static void setAddTaskValue(boolean addTask) { ConfigConstants.addTask = addTask; }
 
-    @Value("${aes.key}")
+    @Value("${aes.key:false}")
     public void setaesKey(String aesKey) {
-        if (aesKey == null || aesKey.trim().isEmpty()) {
-            throw new IllegalStateException("aes.key 必须通过环境变量 KK_AES_KEY 配置，禁止为空");
+        String normalizedAesKey = aesKey == null ? DEFAULT_AES_KEY : aesKey.trim();
+        if (normalizedAesKey.isEmpty() || DEFAULT_AES_KEY.equalsIgnoreCase(normalizedAesKey)) {
+            setaesKeyValue(DEFAULT_AES_KEY);
+            return;
         }
-        if (aesKey.length() != 16) {
-            throw new IllegalStateException("aes.key 必须为16位字符，当前长度: " + aesKey.length());
+        if (normalizedAesKey.length() != 16) {
+            throw new IllegalStateException("aes.key 必须为16位字符，当前长度: " + normalizedAesKey.length());
         }
-        setaesKeyValue(aesKey);
+        setaesKeyValue(normalizedAesKey);
     }
     public static void setaesKeyValue(String aesKey) { ConfigConstants.aesKey = aesKey; }
 
@@ -807,11 +806,11 @@ public class ConfigConstants {
     public void setBasicName(String basicName) { setBasicNameValue(basicName); }
     public static void setBasicNameValue(String basicName) { ConfigConstants.basicName = basicName; }
 
-    @Value("${kk.ignore.ssl:true}")
+    @Value("${kk.ignore.ssl:false}")
     public void setIgnoreSSL(String ignoreSSL) { setIgnoreSSLValue(Boolean.parseBoolean(ignoreSSL)); }
     public static void setIgnoreSSLValue(Boolean ignoreSSL) { ConfigConstants.ignoreSSL = ignoreSSL; }
 
-    @Value("${kk.enable.redirect:true}")
+    @Value("${kk.enable.redirect:false}")
     public void setEnableRedirect(String enableRedirect) { setEnableRedirectValue(Boolean.parseBoolean(enableRedirect)); }
     public static void setEnableRedirectValue(Boolean enableRedirect) { ConfigConstants.enableRedirect = enableRedirect; }
 

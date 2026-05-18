@@ -87,7 +87,8 @@ public class CadFilePreviewImpl implements FilePreview {
                     return WAITING_FILE_PREVIEW_PAGE;
                 } catch (Exception e) {
                     logger.error("Failed to start CAD conversion: {}", filePath, e);
-                    return otherFilePreview.notSupportedFile(model, fileAttribute, "CAD转换异常，请联系管理员");
+                    String message = e.getMessage() == null ? "CAD转换异常，请联系管理员" : e.getMessage();
+                    return otherFilePreview.notSupportedFile(model, fileAttribute, message);
                 }
             }
         }
@@ -110,6 +111,9 @@ public class CadFilePreviewImpl implements FilePreview {
        }
         CompletableFuture<Boolean> conversionFuture;
         // 启动异步转换
+        if (conversionModule != 2 && !cadtopdfservice.isAsposeCadAvailable()) {
+            throw new IllegalStateException(cadtopdfservice.getAsposeCadAvailabilityMessage());
+        }
         if(conversionModule==2){
             conversionFuture = cadtopdfservice.cadViewerConvert(
                     filePath,

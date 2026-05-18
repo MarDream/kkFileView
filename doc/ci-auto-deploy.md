@@ -12,7 +12,7 @@
 
 1. 通过 WinRM 连接 Windows 服务器
 2. 在服务器上的源码目录执行 `git fetch/reset/clean`，同步到 `origin/$KK_DEPLOY_BRANCH`（默认 `master`）
-3. 使用服务器上的 JDK 21 和 Maven 执行 `mvn clean package -Dmaven.test.skip=true`
+3. 使用服务器上的 JDK 25 和 Maven 执行 `mvn clean package -Dmaven.test.skip=true`
 4. 备份线上 jar，替换为新构建产物
 5. 使用现有 `startup.bat` 重启，并做健康检查
 6. 如果健康检查失败，则自动回滚旧 jar 并重新拉起
@@ -33,7 +33,7 @@
 - `KK_DEPLOY_REPO_URL=https://github.com/kekingcn/kkFileView.git`
 - `KK_DEPLOY_BRANCH=master`
 - `KK_DEPLOY_SOURCE_ROOT=C:\kkFileView-source`
-- `KK_DEPLOY_JAVA_HOME=C:\Program Files\jdk-21.0.2`
+- `KK_DEPLOY_JAVA_HOME=C:\Program Files\jdk-25`
 - `KK_DEPLOY_GIT_EXE=C:\kkFileView-tools\git\cmd\git.exe`
 - `KK_DEPLOY_MVN_CMD=C:\kkFileView-tools\maven\bin\mvn.cmd`
 - `KK_DEPLOY_MAVEN_SETTINGS=`
@@ -47,7 +47,7 @@
 
 - Git for Windows（推荐安装在 `C:\kkFileView-tools\git`）
 - Apache Maven 3.9.x（推荐安装在 `C:\kkFileView-tools\maven`）
-- JDK 21（当前线上已存在：`C:\Program Files\jdk-21.0.2`）
+- JDK 25（当前线上建议路径：`C:\Program Files\jdk-25`）
 
 ## Workflow
 

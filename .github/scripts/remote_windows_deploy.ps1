@@ -36,7 +36,7 @@ $HealthUrl = Get-OptionalEnv 'KK_DEPLOY_HEALTH_URL' 'http://127.0.0.1:8012/'
 $RepoUrl = Get-OptionalEnv 'KK_DEPLOY_REPO_URL' 'https://github.com/kekingcn/kkFileView.git'
 $Branch = Get-OptionalEnv 'KK_DEPLOY_BRANCH' 'master'
 $SourceRoot = Get-OptionalEnv 'KK_DEPLOY_SOURCE_ROOT' 'C:\kkFileView-source'
-$JavaHome = Get-OptionalEnv 'KK_DEPLOY_JAVA_HOME' 'C:\Program Files\jdk-21.0.2'
+$JavaHome = Get-OptionalEnv 'KK_DEPLOY_JAVA_HOME' 'C:\Program Files\jdk-25'
 $GitExe = Get-OptionalEnv 'KK_DEPLOY_GIT_EXE' 'C:\kkFileView-tools\git\cmd\git.exe'
 $MvnCmd = Get-OptionalEnv 'KK_DEPLOY_MVN_CMD' 'C:\kkFileView-tools\maven\bin\mvn.cmd'
 $MavenSettings = Get-OptionalEnv 'KK_DEPLOY_MAVEN_SETTINGS' ''
@@ -67,7 +67,7 @@ if (-not $CurrentJar) {
 
 $JavaExe = Join-Path $JavaHome 'bin\java.exe'
 if (-not (Test-Path $JavaExe)) {
-    throw "JDK 21 java executable not found: $JavaExe"
+    throw "JDK 25 java executable not found: $JavaExe"
 }
 
 if (-not (Test-Path $GitExe)) {

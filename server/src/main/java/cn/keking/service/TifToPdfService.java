@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * TIF文件转换服务 - 虚拟线程版本 (JDK 21+)
+ * TIF文件转换服务 - 虚拟线程版本 (JDK 25+)
  */
 @Component
 public class TifToPdfService {

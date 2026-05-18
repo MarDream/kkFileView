@@ -161,6 +161,12 @@ public class ConfigRefreshComponent {
         ConfigConstants.setOfficeExportBookmarksValue(Boolean.parseBoolean(getProperty(properties, "office.exportbookmarks", ConfigConstants.DEFAULT_OFFICE_EXPORTBOOKMARKS)));
         ConfigConstants.setOfficeExportNotesValue(Boolean.parseBoolean(getProperty(properties, "office.exportnotes", ConfigConstants.DEFAULT_OFFICE_EXPORTNOTES)));
         ConfigConstants.setOfficeDocumentOpenPasswordsValue(Boolean.parseBoolean(getProperty(properties, "office.documentopenpasswords", ConfigConstants.DEFAULT_OFFICE_EOCUMENTOPENPASSWORDS)));
+        ConfigConstants.setOfficeTimeoutAutoValue(Boolean.parseBoolean(getProperty(properties, "office.timeout.auto", ConfigConstants.DEFAULT_OFFICE_TIMEOUT_AUTO)));
+        ConfigConstants.setOfficeTimeoutSmallValue(Integer.parseInt(getProperty(properties, "office.timeout.small", ConfigConstants.DEFAULT_OFFICE_TIMEOUT_SMALL)));
+        ConfigConstants.setOfficeTimeoutMediumValue(Integer.parseInt(getProperty(properties, "office.timeout.medium", ConfigConstants.DEFAULT_OFFICE_TIMEOUT_MEDIUM)));
+        ConfigConstants.setOfficeTimeoutLargeValue(Integer.parseInt(getProperty(properties, "office.timeout.large", ConfigConstants.DEFAULT_OFFICE_TIMEOUT_LARGE)));
+        ConfigConstants.setOfficeTimeoutXLargeValue(Integer.parseInt(getProperty(properties, "office.timeout.xlarge", ConfigConstants.DEFAULT_OFFICE_TIMEOUT_XLARGE)));
+        ConfigConstants.setOfficeQueueMaxSizeValue(Integer.parseInt(getProperty(properties, "office.queue.max.size", ConfigConstants.DEFAULT_OFFICE_QUEUE_MAX_SIZE)));
 
         // 4. FTP配置
         ConfigConstants.setFtpUsernameValue(getProperty(properties, "ftp.username", ConfigConstants.DEFAULT_FTP_USERNAME));
@@ -247,6 +253,9 @@ public class ConfigRefreshComponent {
 
         // 18. PDF线程配置
         ConfigConstants.setPdfMaxThreadsValue(Integer.parseInt(getProperty(properties, "pdf.max.threads", ConfigConstants.DEFAULT_PDF_MAX_THREADS)));
+        ConfigConstants.setPdfMaxThreadsAutoValue(Boolean.parseBoolean(getProperty(properties, "pdf.max.threads.auto", ConfigConstants.DEFAULT_PDF_MAX_THREADS_AUTO)));
+        ConfigConstants.setPdfMaxThreadsBaselineValue(Integer.parseInt(getProperty(properties, "pdf.max.threads.baseline", ConfigConstants.DEFAULT_PDF_MAX_THREADS_BASELINE)));
+        ConfigConstants.setPdfMaxThreadsMaxValue(Integer.parseInt(getProperty(properties, "pdf.max.threads.max", ConfigConstants.DEFAULT_PDF_MAX_THREADS_MAX)));
 
         // 19. CAD水印配置
         ConfigConstants.setCadwatermarkValue(Boolean.parseBoolean(getProperty(properties, "cad.watermark", ConfigConstants.DEFAULT_CAD_WATERMARK)));
@@ -270,7 +279,9 @@ public class ConfigRefreshComponent {
     }
 
     private String getProperty(Properties properties, String key, String defaultValue) {
-        return properties.getProperty(key, defaultValue).trim();
+        String fallback = defaultValue == null ? "" : defaultValue;
+        String value = properties.getProperty(key, fallback);
+        return value == null ? "" : value.trim();
     }
 
     private void setWatermarkConfig(Properties properties) {

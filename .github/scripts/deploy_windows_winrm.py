@@ -35,7 +35,7 @@ def main() -> int:
         "KK_DEPLOY_REPO_URL": optional_env("KK_DEPLOY_REPO_URL", "https://github.com/kekingcn/kkFileView.git"),
         "KK_DEPLOY_BRANCH": optional_env("KK_DEPLOY_BRANCH", "master"),
         "KK_DEPLOY_SOURCE_ROOT": optional_env("KK_DEPLOY_SOURCE_ROOT", r"C:\kkFileView-source"),
-        "KK_DEPLOY_JAVA_HOME": optional_env("KK_DEPLOY_JAVA_HOME", r"C:\Program Files\jdk-21.0.2"),
+        "KK_DEPLOY_JAVA_HOME": optional_env("KK_DEPLOY_JAVA_HOME", r"C:\Program Files\jdk-25"),
         "KK_DEPLOY_GIT_EXE": optional_env("KK_DEPLOY_GIT_EXE", r"C:\kkFileView-tools\git\cmd\git.exe"),
         "KK_DEPLOY_MVN_CMD": optional_env("KK_DEPLOY_MVN_CMD", r"C:\kkFileView-tools\maven\bin\mvn.cmd"),
         "KK_DEPLOY_MAVEN_SETTINGS": optional_env("KK_DEPLOY_MAVEN_SETTINGS", ""),

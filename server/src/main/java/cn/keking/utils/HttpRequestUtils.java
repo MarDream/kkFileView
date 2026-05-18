@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * HTTP请求工具类，统一处理HTTP请求逻辑
@@ -54,6 +55,8 @@ public class HttpRequestUtils {
     // 默认连接池配置
     private static final int DEFAULT_MAX_TOTAL = 200;           // 最大连接数
     private static final int DEFAULT_MAX_PER_ROUTE = 50;        // 每个路由最大连接数
+    private static final long IDLE_MONITOR_INTERVAL_MILLIS = 30_000L;
+    private static final AtomicBoolean idleMonitorStarted = new AtomicBoolean(false);
 
     /**
      * 判断是否为客户端中断连接的异常
@@ -150,23 +153,22 @@ public class HttpRequestUtils {
      * 启动空闲连接监控线程
      */
     private static void startIdleConnectionMonitor() {
+        if (!idleMonitorStarted.compareAndSet(false, true)) {
+            return;
+        }
         Thread monitorThread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    synchronized (HttpRequestUtils.class) {
-                        Thread.sleep(30000); // 每30秒检查一次
-                        if (connectionManager != null) {
-                            // 关闭过期的连接
-                            connectionManager.closeExpired();
-                            // 关闭空闲超过30秒的连接
-                            connectionManager.closeIdle(TimeValue.ofSeconds(30));
+                    Thread.sleep(IDLE_MONITOR_INTERVAL_MILLIS);
+                    PoolingHttpClientConnectionManager manager = connectionManager;
+                    if (manager != null) {
+                        manager.closeExpired();
+                        manager.closeIdle(TimeValue.ofSeconds(30));
 
-                            // 可选：打印连接池状态
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("连接池状态：最大连接数={}, 每个路由最大连接数={}",
-                                        connectionManager.getMaxTotal(),
-                                        connectionManager.getDefaultMaxPerRoute());
-                            }
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("连接池状态：最大连接数={}, 每个路由最大连接数={}",
+                                    manager.getMaxTotal(),
+                                    manager.getDefaultMaxPerRoute());
                         }
                     }
                 }
@@ -363,6 +365,7 @@ public class HttpRequestUtils {
             }
             connectionManager = null;
         }
+        idleMonitorStarted.set(false);
 
         // 清空RestTemplate缓存
         restTemplateCache.clear();
