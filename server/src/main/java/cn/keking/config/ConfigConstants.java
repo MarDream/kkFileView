@@ -30,8 +30,8 @@ public class ConfigConstants {
     // 一、基础配置常量
     // ==================================================
     public static final String DEFAULT_VALUE = "default";
-    public static final String DEFAULT_SHOW_AES_KEY = "1234567890123456";
-    public static final String DEFAULT_PASSWORD = "123456";
+    public static final String DEFAULT_SHOW_AES_KEY = "";  // 强制通过环境变量配置
+    public static final String DEFAULT_PASSWORD = "";      // 强制通过环境变量配置
     public static final String DEFAULT_SIZE = "500MB";
     public static final String DEFAULT_ENABLE_REFRECSHSCHEDULE = "5";
     public static final String DEFAULT_IS_JAVASCRIPT = "false";
@@ -39,11 +39,21 @@ public class ConfigConstants {
     public static final String DEFAULT_XLSX_SHOW_TOOLBAR = "false";
     public static final String DEFAULT_IS_SHOW_KEY = "false";
     public static final String DEFAULT_SCRIPT_JS = "false";
+    public static final String DEFAULT_AES_KEY = "";       // 强制通过环境变量配置
 
     // ==================================================
     // 二、缓存配置常量
     // ==================================================
     public static final String DEFAULT_CACHE_ENABLED = "true";
+    public static final String DEFAULT_PDF_MAX_THREADS_AUTO = "true";
+    public static final String DEFAULT_PDF_MAX_THREADS_BASELINE = "10";
+    public static final String DEFAULT_PDF_MAX_THREADS_MAX = "50";
+    public static final String DEFAULT_OFFICE_TIMEOUT_AUTO = "true";
+    public static final String DEFAULT_OFFICE_TIMEOUT_SMALL = "120";
+    public static final String DEFAULT_OFFICE_TIMEOUT_MEDIUM = "300";
+    public static final String DEFAULT_OFFICE_TIMEOUT_LARGE = "600";
+    public static final String DEFAULT_OFFICE_TIMEOUT_XLARGE = "900";
+    public static final String DEFAULT_OFFICE_QUEUE_MAX_SIZE = "100";
 
     // ==================================================
     // 三、文件类型配置常量
@@ -185,6 +195,12 @@ public class ConfigConstants {
     private static Boolean officeExportBookmarks;
     private static Boolean officeExportNotes;
     private static Boolean officeDocumentOpenPasswords;
+    private static Boolean officeTimeoutAuto;
+    private static int officeTimeoutSmall;
+    private static int officeTimeoutMedium;
+    private static int officeTimeoutLarge;
+    private static int officeTimeoutXLarge;
+    private static int officeQueueMaxSize;
 
     // ==================================================
     // 4. PDF配置变量
@@ -208,6 +224,9 @@ public class ConfigConstants {
     private static int pdfTimeoutLarge;
     private static int pdfTimeoutXLarge;
     private static int pdfMaxThreads;
+    private static Boolean pdfMaxThreadsAuto;
+    private static int pdfMaxThreadsBaseline;
+    private static int pdfMaxThreadsMax;
 
     // ==================================================
     // 5. CAD配置变量
@@ -328,6 +347,12 @@ public class ConfigConstants {
     public static Boolean getOfficeExportBookmarks() { return officeExportBookmarks; }
     public static Boolean getOfficeExportNotes() { return officeExportNotes; }
     public static Boolean getOfficeDocumentOpenPasswords() { return officeDocumentOpenPasswords; }
+    public static Boolean getOfficeTimeoutAuto() { return officeTimeoutAuto; }
+    public static int getOfficeTimeoutSmall() { return officeTimeoutSmall; }
+    public static int getOfficeTimeoutMedium() { return officeTimeoutMedium; }
+    public static int getOfficeTimeoutLarge() { return officeTimeoutLarge; }
+    public static int getOfficeTimeoutXLarge() { return officeTimeoutXLarge; }
+    public static int getOfficeQueueMaxSize() { return officeQueueMaxSize; }
 
     // ==================================================
     // 4. PDF配置获取方法
@@ -345,6 +370,9 @@ public class ConfigConstants {
     public static int getPdfTimeoutLarge() { return pdfTimeoutLarge; }
     public static int getPdfTimeoutXLarge() { return pdfTimeoutXLarge; }
     public static int getPdfMaxThreads() { return pdfMaxThreads; }
+    public static Boolean getPdfMaxThreadsAuto() { return pdfMaxThreadsAuto; }
+    public static int getPdfMaxThreadsBaseline() { return pdfMaxThreadsBaseline; }
+    public static int getPdfMaxThreadsMax() { return pdfMaxThreadsMax; }
 
     /**
      * 根据页数获取优化的DPI值
@@ -539,6 +567,30 @@ public class ConfigConstants {
     public void setDocumentOpenPasswords(Boolean officeDocumentOpenPasswords) { setOfficeDocumentOpenPasswordsValue(officeDocumentOpenPasswords); }
     public static void setOfficeDocumentOpenPasswordsValue(Boolean officeDocumentOpenPasswords) { ConfigConstants.officeDocumentOpenPasswords = officeDocumentOpenPasswords; }
 
+    @Value("${office.timeout.auto:true}")
+    public void setOfficeTimeoutAuto(String officeTimeoutAuto) { setOfficeTimeoutAutoValue(Boolean.parseBoolean(officeTimeoutAuto)); }
+    public static void setOfficeTimeoutAutoValue(Boolean officeTimeoutAuto) { ConfigConstants.officeTimeoutAuto = officeTimeoutAuto; }
+
+    @Value("${office.timeout.small:120}")
+    public void setOfficeTimeoutSmall(int officeTimeoutSmall) { setOfficeTimeoutSmallValue(officeTimeoutSmall); }
+    public static void setOfficeTimeoutSmallValue(int officeTimeoutSmall) { ConfigConstants.officeTimeoutSmall = officeTimeoutSmall; }
+
+    @Value("${office.timeout.medium:300}")
+    public void setOfficeTimeoutMedium(int officeTimeoutMedium) { setOfficeTimeoutMediumValue(officeTimeoutMedium); }
+    public static void setOfficeTimeoutMediumValue(int officeTimeoutMedium) { ConfigConstants.officeTimeoutMedium = officeTimeoutMedium; }
+
+    @Value("${office.timeout.large:600}")
+    public void setOfficeTimeoutLarge(int officeTimeoutLarge) { setOfficeTimeoutLargeValue(officeTimeoutLarge); }
+    public static void setOfficeTimeoutLargeValue(int officeTimeoutLarge) { ConfigConstants.officeTimeoutLarge = officeTimeoutLarge; }
+
+    @Value("${office.timeout.xlarge:900}")
+    public void setOfficeTimeoutXLarge(int officeTimeoutXLarge) { setOfficeTimeoutXLargeValue(officeTimeoutXLarge); }
+    public static void setOfficeTimeoutXLargeValue(int officeTimeoutXLarge) { ConfigConstants.officeTimeoutXLarge = officeTimeoutXLarge; }
+
+    @Value("${office.queue.max.size:100}")
+    public void setOfficeQueueMaxSize(int officeQueueMaxSize) { setOfficeQueueMaxSizeValue(officeQueueMaxSize); }
+    public static void setOfficeQueueMaxSizeValue(int officeQueueMaxSize) { ConfigConstants.officeQueueMaxSize = officeQueueMaxSize; }
+
     // ==================================================
     // 4. PDF配置Setter方法
     // ==================================================
@@ -618,6 +670,18 @@ public class ConfigConstants {
     public void setPdfMaxThreads(int pdfMaxThreads) { setPdfMaxThreadsValue(pdfMaxThreads); }
     public static void setPdfMaxThreadsValue(int pdfMaxThreads) { ConfigConstants.pdfMaxThreads = pdfMaxThreads; }
 
+    @Value("${pdf.max.threads.auto:true}")
+    public void setPdfMaxThreadsAuto(String pdfMaxThreadsAuto) { setPdfMaxThreadsAutoValue(Boolean.parseBoolean(pdfMaxThreadsAuto)); }
+    public static void setPdfMaxThreadsAutoValue(Boolean pdfMaxThreadsAuto) { ConfigConstants.pdfMaxThreadsAuto = pdfMaxThreadsAuto; }
+
+    @Value("${pdf.max.threads.baseline:10}")
+    public void setPdfMaxThreadsBaseline(int pdfMaxThreadsBaseline) { setPdfMaxThreadsBaselineValue(pdfMaxThreadsBaseline); }
+    public static void setPdfMaxThreadsBaselineValue(int pdfMaxThreadsBaseline) { ConfigConstants.pdfMaxThreadsBaseline = pdfMaxThreadsBaseline; }
+
+    @Value("${pdf.max.threads.max:50}")
+    public void setPdfMaxThreadsMax(int pdfMaxThreadsMax) { setPdfMaxThreadsMaxValue(pdfMaxThreadsMax); }
+    public static void setPdfMaxThreadsMaxValue(int pdfMaxThreadsMax) { ConfigConstants.pdfMaxThreadsMax = pdfMaxThreadsMax; }
+
     // ==================================================
     // 5. CAD配置Setter方法
     // ==================================================
@@ -664,8 +728,13 @@ public class ConfigConstants {
     public void setSize(String size) { setSizeValue(size); }
     public static void setSizeValue(String size) { ConfigConstants.size = size; }
 
-    @Value("${delete.password:123456}")
-    public void setPassword(String password) { setPasswordValue(password); }
+    @Value("${delete.password}")
+    public void setPassword(String password) {
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalStateException("delete.password 必须通过环境变量 KK_DELETE_PASSWORD 配置，禁止为空");
+        }
+        setPasswordValue(password);
+    }
     public static void setPasswordValue(String password) { ConfigConstants.password = password; }
 
     @Value("${delete.source.file:true}")
@@ -718,8 +787,16 @@ public class ConfigConstants {
     public void setAddTask(String addTask) { setAddTaskValue(Boolean.parseBoolean(addTask)); }
     public static void setAddTaskValue(boolean addTask) { ConfigConstants.addTask = addTask; }
 
-    @Value("${aes.key:1234567890123456}")
-    public void setaesKey(String aesKey) { setaesKeyValue(aesKey); }
+    @Value("${aes.key}")
+    public void setaesKey(String aesKey) {
+        if (aesKey == null || aesKey.trim().isEmpty()) {
+            throw new IllegalStateException("aes.key 必须通过环境变量 KK_AES_KEY 配置，禁止为空");
+        }
+        if (aesKey.length() != 16) {
+            throw new IllegalStateException("aes.key 必须为16位字符，当前长度: " + aesKey.length());
+        }
+        setaesKeyValue(aesKey);
+    }
     public static void setaesKeyValue(String aesKey) { ConfigConstants.aesKey = aesKey; }
 
     @Value("${useragent:false}")

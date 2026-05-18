@@ -23,9 +23,6 @@
     </#list>
   
 </div>
-<#if "false" == switchDisabled>
-    <img src="images/pdf.svg" width="48" height="48" style="position: fixed; cursor: pointer; top: 40%; right: 48px; z-index: 999;" alt="使用PDF预览" title="使用PDF预览" onclick="changePreviewType('pdf')"/>
-</#if>
 
 <!-- 页码跳转输入框 -->
 <div id="pageJumpBox" style="position: fixed; top: 20px; right: 120px; background: white; padding: 10px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; z-index: 1000;">

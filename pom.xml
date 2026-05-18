@@ -18,7 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- ========== Spring 框架 ========== -->
-        <spring.boot.version>3.5.6</spring.boot.version>
+        <spring.boot.version>3.5.7</spring.boot.version>
 
         <!-- ========== 文档转换和Office处理 ========== -->
         <jodconverter.version>4.4.11</jodconverter.version>
@@ -32,7 +32,7 @@
         <!-- ========== 图像处理 ========== -->
         <jai-imageio.version>1.4.0</jai-imageio.version>
         <jbig2-imageio.version>3.0.4</jbig2-imageio.version>
-        <commons-imaging.version>1.0.0-alpha6</commons-imaging.version>
+        <commons-imaging.version>1.4.0</commons-imaging.version>
 
         <!-- ========== 视频处理 (JavaCV) ========== -->
         <bytedeco.version>1.5.12</bytedeco.version>
@@ -46,7 +46,7 @@
 
         <!-- ========== 缓存和存储 ========== -->
         <redisson.version>4.0.0</redisson.version>
-        <rocksdb.version>5.17.2</rocksdb.version>
+        <rocksdb.version>9.12.1</rocksdb.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 
         <!-- ========== 网络通信 ========== -->
@@ -62,10 +62,10 @@
         <jchardet.version>1.0</jchardet.version>
 
         <!-- ========== 安全相关 ========== -->
-        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
+        <bcprov-jdk15on.version>1.79</bcprov-jdk15on.version>
 
         <!-- ========== 其他工具库 ========== -->
-        <xstream.version>1.4.21</xstream.version>
+        <xstream.version>1.4.34</xstream.version>
         <antlr.version>2.7.7</antlr.version>
         <galimatias.version>0.2.1</galimatias.version>
     </properties>
