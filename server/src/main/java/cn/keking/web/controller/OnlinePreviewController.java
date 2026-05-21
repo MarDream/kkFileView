@@ -67,7 +67,7 @@ public class OnlinePreviewController {
                                 @RequestParam(required = false) String key,
                                 @RequestParam(required = false) String encryption,
                                 @RequestParam(defaultValue = "false") String highlightall,
-                                @RequestParam(defaultValue = "0") String page,
+                                @RequestParam(defaultValue = "1") String page,
                                 @RequestParam(defaultValue = "false") String kkagent,
                                 Model model,
                                 HttpServletRequest req) {

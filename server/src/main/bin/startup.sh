@@ -16,11 +16,13 @@ KKFILEVIEW_BIN_FOLDER=$(cd "$(dirname "$0")" || exit 1 ;pwd)
 PID_FILE_NAME="kkFileView.pid"
 PID_FILE="${KKFILEVIEW_BIN_FOLDER}/${PID_FILE_NAME}"
 export KKFILEVIEW_BIN_FOLDER=$KKFILEVIEW_BIN_FOLDER
+export LOG_PATH="${LOG_PATH:-${KKFILEVIEW_BIN_FOLDER}/../log}"
 #
 ## 如pid文件不存在则自动创建
 if [ ! -f ${PID_FILE_NAME} ]; then
   touch "${KKFILEVIEW_BIN_FOLDER}/${PID_FILE_NAME}"
 fi
+mkdir -p "${LOG_PATH}"
 ## 判断当前是否有进程处于运行状态
 if [ -s "${PID_FILE}" ]; then
   PID=$(cat "${PID_FILE}")
@@ -58,7 +60,8 @@ else
   ## 启动kkFileView
   echo "Starting kkFileView..."
   echo "Using jar ${JAR_PATH}"
-  nohup java -Dfile.encoding=UTF-8 -Dspring.config.location=../config/application.properties -jar "${JAR_PATH}" > ../log/kkFileView.log 2>&1 &
+  echo "Using LOG_PATH ${LOG_PATH}"
+  nohup java -Dfile.encoding=UTF-8 -Dspring.config.location=../config/application.properties -jar "${JAR_PATH}" >/dev/null 2>&1 &
   echo "Please execute ./showlog.sh to check log for more information"
   echo "You can get help in our official home site: https://kkview.cn"
   echo "If you need further help, please join our kk opensource community: https://t.zsxq.com/09ZHSXbsQ"

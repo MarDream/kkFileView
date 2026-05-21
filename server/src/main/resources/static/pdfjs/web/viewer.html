@@ -287,7 +287,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                     <span data-l10n-id="pdfjs-next-button-label"></span>
                   </button>
                 </div>
-                <div class="toolbarHorizontalGroup">
+                <div class="toolbarHorizontalGroup zoomToolbarGroup">
                   <span class="loadingInput start toolbarHorizontalGroup">
                     <input
                       type="number"
@@ -313,8 +313,9 @@ See https://github.com/adobe-type-tools/cmap-resources
                     <span data-l10n-id="pdfjs-zoom-in-button-label"></span>
                   </button>
                 </div>
-                <span id="scaleSelectContainer" class="dropdownToolbarButton">
-                  <select id="scaleSelect" tabindex="0" data-l10n-id="pdfjs-zoom-select">
+                <span id="scaleSelectContainer" class="toolbarScaleValue" title="当前缩放比例">
+                  <span id="scaleDisplay" class="toolbarField" aria-live="polite">100%</span>
+                  <select id="scaleSelect" tabindex="-1" aria-hidden="true" data-l10n-id="pdfjs-zoom-select">
                     <option id="pageAutoOption" value="auto" selected="selected" data-l10n-id="pdfjs-page-scale-auto"></option>
                     <option id="pageActualOption" value="page-actual" data-l10n-id="pdfjs-page-scale-actual"></option>
                     <option id="pageFitOption" value="page-fit" data-l10n-id="pdfjs-page-scale-fit"></option>

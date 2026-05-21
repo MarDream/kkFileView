@@ -6070,7 +6070,7 @@ const PasswordResponses = {
   NEED_PASSWORD: 1,
   INCORRECT_PASSWORD: 2
 };
-let verbosity = VerbosityLevel.WARNINGS;
+let verbosity = VerbosityLevel.ERRORS;
 function setVerbosityLevel(level) {
   if (Number.isInteger(level)) {
     verbosity = level;

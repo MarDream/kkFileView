@@ -8,7 +8,6 @@ import cn.keking.service.FileHandlerService;
 import cn.keking.service.FilePreview;
 import cn.keking.service.Mediatomp4Service;
 import cn.keking.utils.DownloadUtils;
-import cn.keking.utils.FileConvertStatusManager;
 import cn.keking.utils.KkFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

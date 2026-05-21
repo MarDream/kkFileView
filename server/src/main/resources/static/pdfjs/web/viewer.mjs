@@ -5885,7 +5885,7 @@ const defaultOptions = {
     type: Type.BOOLEAN + Type.UNDEFINED
   },
   verbosity: {
-    value: 1,
+    value: 0,
     kind: OptionKind.API
   },
   wasmUrl: {
@@ -21012,6 +21012,7 @@ class Toolbar {
       pageScale
     } = this;
     const opts = this.#opts;
+    const scalePercent = Math.round(pageScale * 10000) / 100;
     if (resetNumPages) {
       if (this.hasPageLabels) {
         opts.pageNumber.type = "text";
@@ -21038,6 +21039,9 @@ class Toolbar {
     opts.next.disabled = pageNumber >= pagesCount;
     opts.zoomOut.disabled = pageScale <= MIN_SCALE;
     opts.zoomIn.disabled = pageScale >= MAX_SCALE;
+    if (opts.scaleDisplay) {
+      opts.scaleDisplay.textContent = `${scalePercent}%`;
+    }
     let predefinedValueFound = false;
     for (const option of opts.scaleSelect.options) {
       if (option.value !== pageScaleValue) {
@@ -22721,7 +22725,9 @@ const PDFViewerApplication = {
     this.metadata = metadata;
     this._contentDispositionFilename ??= contentDispositionFilename;
     this._contentLength ??= contentLength;
-    console.log(`PDF ${pdfDocument.fingerprints[0]} [${info.PDFFormatVersion} ` + `${(metadata?.get("pdf:producer") || info.Producer || "-").trim()} / ` + `${(metadata?.get("xmp:creatortool") || info.Creator || "-").trim()}` + `] (PDF.js: ${version || "?"} [${build || "?"}])`);
+    if (AppOptions.get("verbosity") >= VerbosityLevel.INFOS) {
+      console.log(`PDF ${pdfDocument.fingerprints[0]} [${info.PDFFormatVersion} ` + `${(metadata?.get("pdf:producer") || info.Producer || "-").trim()} / ` + `${(metadata?.get("xmp:creatortool") || info.Creator || "-").trim()}` + `] (PDF.js: ${version || "?"} [${build || "?"}])`);
+    }
     const pdfTitle = this._docTitle;
     if (pdfTitle) {
       this.setTitle(`${pdfTitle} - ${this._contentDispositionFilename || this._title}`);
@@ -23782,6 +23788,7 @@ function getViewerConfiguration() {
       container: document.getElementById("toolbarContainer"),
       numPages: document.getElementById("numPages"),
       pageNumber: document.getElementById("pageNumber"),
+      scaleDisplay: document.getElementById("scaleDisplay"),
       scaleSelect: document.getElementById("scaleSelect"),
       customScaleOption: document.getElementById("customScaleOption"),
       previous: document.getElementById("previous"),

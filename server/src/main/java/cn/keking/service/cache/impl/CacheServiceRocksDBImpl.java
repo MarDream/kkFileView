@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -258,15 +259,55 @@ public class CacheServiceRocksDBImpl implements CacheService {
         return bytes;
     }
 
+    /**
+     * 安全反序列化：添加类型白名单验证，防止反序列化攻击
+     * 只允许预期的集合类型进行反序列化
+     */
     private Object toObject(byte[] bytes) throws IOException, ClassNotFoundException {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
         Object obj;
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        ObjectInputStream ois = new ObjectInputStream(bis);
+        ObjectInputStream ois = new ObjectInputStream(bis) {
+            @Override
+            protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                // 类型白名单：只允许预期的集合类型
+                String className = desc.getName();
+                if (!ALLOWED_DESERIALIZATION_CLASSES.contains(className)) {
+                    throw new InvalidClassException("Unauthorized deserialization attempt", className);
+                }
+                return super.resolveClass(desc);
+            }
+        };
         obj = ois.readObject();
         ois.close();
         bis.close();
         return obj;
     }
+
+    /**
+     * 允许反序列化的类型白名单
+     * 包含项目中使用的集合类型及其内部类型
+     */
+    private static final Set<String> ALLOWED_DESERIALIZATION_CLASSES = Set.of(
+            // 基本集合类型
+            "java.util.HashMap",
+            "java.util.LinkedHashMap",
+            "java.util.ArrayList",
+            "java.util.LinkedList",
+            // Map.Entry
+            "java.util.HashMap$Node",
+            "java.util.HashMap$Entry",
+            // 内部存储类型
+            "java.lang.String",
+            "java.lang.Integer",
+            "[Ljava.lang.String;",  // String数组
+            // 可能的其他类型
+            "java.util.HashSet",
+            "java.util.TreeMap",
+            "java.util.TreeSet"
+    );
 
     private void cleanPdfCache() throws IOException, RocksDBException {
         Map<String, String> initPDFCache = new HashMap<>();

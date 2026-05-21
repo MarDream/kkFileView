@@ -1,0 +1,68 @@
+
+  _      _      ______   _   _         __      __  _
+ | |    | |    |  ____| (_) | |        \ \    / / (_)
+ | | __ | | __ | |__     _  | |   ___   \ \  / /   _    ___  __      __
+ | |/ / | |/ / |  __|   | | | |  / _ \   \ \/ /   | |  / _ \ \ \ /\ / /
+ |   <  |   <  | |      | | | | |  __/    \  /    | | |  __/  \ V  V /
+ |_|\_\ |_|\_\ |_|      |_| |_|  \___|     \/     |_|  \___|   \_/\_/
+
+ => Java Version            ::  25
+ => Spring Boot             ::  4.0.6
+ => kkFileView              ::  5.0
+ => Home site               ::  https://kkview.cn
+ => Github                  ::  https://github.com/kekingcn/kkFileView
+ => Gitee                   ::  https://gitee.com/kekingcn/file-online-preview
+ => kk opensource community ::  https://t.zsxq.com/09ZHSXbsQ
+
+2026-05-20 13:40:40.613 | INFO  | [main] | o.a.coyote.http11.Http11NioProtocol | Initializing ProtocolHandler ["http-nio-8012"]
+2026-05-20 13:40:40.615 | INFO  | [main] | o.a.catalina.core.StandardService | Starting service [Tomcat]
+2026-05-20 13:40:40.615 | INFO  | [main] | o.a.catalina.core.StandardEngine | Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-05-20 13:40:40.790 | INFO  | [main] | c.k.config.ConfigRefreshComponent | 配置文件重新加载完成
+2026-05-20 13:40:40.794 | INFO  | [pool-3-thread-1] | c.k.config.ConfigRefreshComponent | 开始监听配置文件: E:\Project\mygit\kkFileView\server\src\main\config\application.properties
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.googlecode.concurrentlinkedhashmap.ConcurrentHashMapV8 (jar:nested:/E:/Project/mygit/kkFileView/server/target/kkFileView-5.0.0.jar/!BOOT-INF/lib/concurrentlinkedhashmap-lru-1.4.2.jar!/)
+WARNING: Please consider reporting this to the maintainers of class com.googlecode.concurrentlinkedhashmap.ConcurrentHashMapV8
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+2026-05-20 13:40:41.014 | WARN  | [main] | cn.keking.service.CadToPdfService | Aspose CAD 运行时不可用，请使用 -Pwith-aspose-cad 构建，或配置 cad.cadconverterpath 启用外部 CAD 转换器。
+2026-05-20 13:40:41.015 | INFO  | [main] | cn.keking.service.CadToPdfService | CAD转换服务初始化完成，最大并发数: 5，转换超时: 90秒
+2026-05-20 13:40:41.022 | INFO  | [main] | c.k.service.FileConvertQueueTask | 队列处理文件转换任务启动完成 
+2026-05-20 13:40:41.448 | WARN  | [main] | c.keking.service.OfficePluginManager | 检测到有正在运行的office进程，已自动结束该进程
+2026-05-20 13:40:41.580 | INFO  | [main] | cn.keking.service.PdfToJpgService | PDF转换执行器初始化完成，工作线程数: 10，文档并发上限: 4
+2026-05-20 13:40:41.581 | INFO  | [main] | cn.keking.service.PdfToJpgService | 缓存清理任务已启动（每5分钟执行一次）
+2026-05-20 13:40:41.584 | INFO  | [main] | cn.keking.service.TifToPdfService | TIF转换虚拟线程执行器初始化完成
+2026-05-20 13:40:41.810 | INFO  | [main] | cn.keking.config.WebConfig | Add resource locations: E:\Project\mygit\kkFileView\server\src\main\file\
+2026-05-20 13:40:41.955 | WARN  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Profile dir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2001_tcpNoDelay-1' already exists; deleting
+2026-05-20 13:40:41.955 | WARN  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Profile dir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2002_tcpNoDelay-1' already exists; deleting
+2026-05-20 13:40:42.028 | INFO  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Starting process with --accept 'socket,host=127.0.0.1,port=2001,tcpNoDelay=1;urp;StarOffice.ServiceManager' and profileDir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2001_tcpNoDelay-1'
+2026-05-20 13:40:42.037 | INFO  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Starting process with --accept 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ServiceManager' and profileDir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2002_tcpNoDelay-1'
+2026-05-20 13:40:42.166 | INFO  | [main] | o.a.coyote.http11.Http11NioProtocol | Starting ProtocolHandler ["http-nio-8012"]
+2026-05-20 13:40:42.256 | INFO  | [main] | cn.keking.ServerMain | kkFileView 服务启动完成，耗时:3.3090315s，演示页请访问: http://127.0.0.1:8012/ 
+2026-05-20 13:40:45.199 | INFO  | [jodconverter-offprocmng-0] | o.j.local.office.OfficeConnection | Connected: 'socket,host=127.0.0.1,port=2001,tcpNoDelay=1'
+2026-05-20 13:40:45.200 | INFO  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Started process; pid: 18148
+2026-05-20 13:40:45.678 | INFO  | [jodconverter-offprocmng-1] | o.j.local.office.OfficeConnection | Connected: 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1'
+2026-05-20 13:40:45.679 | INFO  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Started process; pid: 35792
+2026-05-20 13:41:04.243 | INFO  | [http-nio-8012-exec-1] | o.a.c.c.C.[Tomcat].[localhost].[/] | Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-20 13:41:23.487 | WARN  | [http-nio-8012-exec-4] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:42:30.152 | INFO  | [MessageDispatcher] | o.j.local.office.OfficeConnection | Disconnected from 'socket,host=127.0.0.1,port=2001,tcpNoDelay=1'
+2026-05-20 13:42:30.152 | WARN  | [MessageDispatcher] | o.j.l.o.LocalOfficeManagerPoolEntry | Connection lost unexpectedly; attempting restart
+2026-05-20 13:42:30.152 | INFO  | [MessageDispatcher] | o.j.l.o.LocalOfficeProcessManager | Restarting due to lost connection...
+2026-05-20 13:42:30.166 | INFO  | [MessageDispatcher] | o.j.local.office.OfficeConnection | Disconnected from 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1'
+2026-05-20 13:42:30.166 | WARN  | [MessageDispatcher] | o.j.l.o.LocalOfficeManagerPoolEntry | Connection lost unexpectedly; attempting restart
+2026-05-20 13:42:30.166 | INFO  | [MessageDispatcher] | o.j.l.o.LocalOfficeProcessManager | Restarting due to lost connection...
+2026-05-20 13:42:30.405 | INFO  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Process exited with code 1
+2026-05-20 13:42:30.418 | INFO  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Process exited with code 1
+2026-05-20 13:42:30.749 | INFO  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Starting process with --accept 'socket,host=127.0.0.1,port=2001,tcpNoDelay=1;urp;StarOffice.ServiceManager' and profileDir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2001_tcpNoDelay-1'
+2026-05-20 13:42:30.808 | WARN  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | A process with --accept 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ServiceManager' is already running; pid 19924; trying to kill it...
+2026-05-20 13:42:32.403 | WARN  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Profile dir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2002_tcpNoDelay-1' already exists; deleting
+2026-05-20 13:42:32.412 | INFO  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Starting process with --accept 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ServiceManager' and profileDir 'C:\Users\mervy\AppData\Local\Temp\.jodconverter_socket_host-127.0.0.1_port-2002_tcpNoDelay-1'
+2026-05-20 13:42:34.366 | INFO  | [jodconverter-offprocmng-0] | o.j.local.office.OfficeConnection | Connected: 'socket,host=127.0.0.1,port=2001,tcpNoDelay=1'
+2026-05-20 13:42:34.366 | INFO  | [jodconverter-offprocmng-0] | o.j.l.o.LocalOfficeProcessManager | Started process; pid: 26636
+2026-05-20 13:42:35.709 | INFO  | [jodconverter-offprocmng-1] | o.j.local.office.OfficeConnection | Connected: 'socket,host=127.0.0.1,port=2002,tcpNoDelay=1'
+2026-05-20 13:42:35.709 | INFO  | [jodconverter-offprocmng-1] | o.j.l.o.LocalOfficeProcessManager | Started process; pid: 34292
+2026-05-20 13:43:17.794 | WARN  | [http-nio-8012-exec-3] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:43:22.305 | WARN  | [http-nio-8012-exec-5] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:43:26.708 | WARN  | [http-nio-8012-exec-7] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:44:00.297 | WARN  | [http-nio-8012-exec-10] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:44:04.716 | WARN  | [http-nio-8012-exec-1] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:44:09.051 | WARN  | [http-nio-8012-exec-4] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问
+2026-05-20 13:44:13.433 | WARN  | [http-nio-8012-exec-2] | c.keking.web.filter.TrustHostFilter | 主机名为空或无效，拒绝访问

@@ -28,7 +28,7 @@ public class WatermarkConfigConstants {
     public static String DEFAULT_WATERMARK_ALPHA = "0.2";
     public static String DEFAULT_WATERMARK_WIDTH = "240";
     public static String DEFAULT_WATERMARK_HEIGHT = "80";
-    public static String DEFAULT_WATERMARK_ANGLE = "10";
+    public static String DEFAULT_WATERMARK_ANGLE = "45";
 
     public static String getWatermarkTxt() {
         return WATERMARK_TXT;
@@ -155,7 +155,7 @@ public class WatermarkConfigConstants {
         WATERMARK_ANGLE = watermarkAngle;
     }
 
-    @Value("${watermark.angle:10}")
+    @Value("${watermark.angle:45}")
     public void setWatermarkAngle(String watermarkAngle) {
         WATERMARK_ANGLE = watermarkAngle;
     }

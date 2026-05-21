@@ -43,6 +43,17 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Jackson 3.x (Spring Boot 4.0 默认使用 tools.jackson) -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!-- Jackson 2.x 用于第三方库兼容（如 jodconverter、xdocreport） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- ========== 文档格式转换 ========== -->
         <dependency>

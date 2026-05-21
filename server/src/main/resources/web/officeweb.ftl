@@ -57,58 +57,231 @@
         height: 100%;
         width: 100%;
         overflow: hidden;
+        background: #fff;
+    }
+
+    #preview-shell {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    #preview-shell:fullscreen,
+    #preview-shell:-webkit-full-screen {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    #luckysheet {
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        outline: none;
     }
 
     #loading-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         background: rgba(255, 255, 255, 0.95);
         display: flex;
         justify-content: center;
         align-items: center;
-        flex-direction: column;
+        padding: 24px;
         z-index: 9999;
         transition: opacity 0.3s ease;
+        background:
+            radial-gradient(circle at top, rgba(255, 227, 181, 0.72), rgba(255, 250, 242, 0) 36%),
+            linear-gradient(180deg, #fff7ee 0%, #fffdf9 100%);
+    }
+
+    .loading-card {
+        width: min(680px, calc(100vw - 48px));
+        padding: 34px 44px 40px;
+        border-radius: 40px;
+        background: rgba(255, 252, 246, 0.94);
+        border: 1px solid rgba(243, 207, 153, 0.5);
+        box-shadow:
+            0 24px 64px rgba(212, 146, 58, 0.16),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        text-align: center;
+        backdrop-filter: blur(8px);
+    }
+
+    .loading-bear-stage {
+        position: relative;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: min(360px, 100%);
+        margin: 0 auto 10px;
+    }
+
+    .loading-bear-stage::before {
+        content: "";
+        position: absolute;
+        inset: 16px 30px 30px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 196, 96, 0.34), rgba(255, 196, 96, 0) 72%);
+        filter: blur(10px);
+        animation: bearGlow 3s ease-in-out infinite;
+    }
+
+    .loading-bear-image {
+        position: relative;
+        z-index: 1;
+        width: min(300px, 72vw);
+        max-width: 100%;
+        user-select: none;
+        pointer-events: none;
+        filter: drop-shadow(0 22px 26px rgba(201, 135, 52, 0.18));
+        transform-origin: center bottom;
+        animation: bearFloat 3.2s ease-in-out infinite;
+    }
+
+    .loading-title {
+        margin-top: 6px;
+        font-size: clamp(30px, 4vw, 44px);
+        font-weight: 700;
+        line-height: 1.2;
+        color: #4f2a12;
+        letter-spacing: 0.02em;
+    }
+
+    .loading-subtitle {
+        margin-top: 8px;
+        font-size: clamp(15px, 2vw, 18px);
+        line-height: 1.7;
+        color: #9b6844;
+    }
+
+    .loading-dots {
+        display: inline-flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .loading-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffbc68 0%, #ff8a3d 100%);
+        box-shadow: 0 6px 14px rgba(255, 147, 52, 0.28);
+        animation: dotBounce 1.3s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+        animation-delay: 0.16s;
+    }
+
+    .loading-dots span:nth-child(3) {
+        animation-delay: 0.32s;
     }
 
     #loading-progress {
-        width: 300px;
-        height: 20px;
-        background: #f0f0f0;
-        border-radius: 10px;
-        margin-top: 20px;
+        position: relative;
+        width: min(420px, 100%);
+        height: 16px;
+        margin: 28px auto 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 2px solid rgba(175, 128, 90, 0.38);
         overflow: hidden;
+        box-shadow: inset 0 2px 5px rgba(124, 74, 28, 0.08);
     }
 
     #loading-bar {
+        position: relative;
         width: 0%;
         height: 100%;
-        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: inherit;
+        background: linear-gradient(90deg, #ff8f49 0%, #ffb95e 56%, #ffd57a 100%);
         transition: width 0.3s ease;
-        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(255, 146, 66, 0.3);
     }
 
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #4CAF50;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
+    #loading-bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -22%;
+        width: 22%;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+        transform: skewX(-18deg);
+        animation: progressShine 1.6s linear infinite;
     }
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    .loading-caption {
+        font-size: clamp(24px, 3.6vw, 34px);
+        font-weight: 700;
+        color: #4f2a12;
+        letter-spacing: 0.03em;
     }
 
-    .loading-text {
-        margin-top: 20px;
-        font-size: 16px;
-        color: #666;
+    @keyframes bearFloat {
+        0%, 100% {
+            transform: translateY(0) rotate(-1deg) scale(1);
+        }
+        50% {
+            transform: translateY(-10px) rotate(1.2deg) scale(1.015);
+        }
+    }
+
+    @keyframes bearGlow {
+        0%, 100% {
+            opacity: 0.78;
+            transform: scale(0.98);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.04);
+        }
+    }
+
+    @keyframes dotBounce {
+        0%, 80%, 100% {
+            transform: translateY(0);
+            opacity: 0.58;
+        }
+        40% {
+            transform: translateY(-7px);
+            opacity: 1;
+        }
+    }
+
+    @keyframes progressShine {
+        0% {
+            transform: translateX(0) skewX(-18deg);
+        }
+        100% {
+            transform: translateX(-520%) skewX(-18deg);
+        }
+    }
+
+    @media (max-width: 640px) {
+        #loading-overlay {
+            padding: 16px;
+        }
+
+        .loading-card {
+            width: calc(100vw - 32px);
+            padding: 26px 22px 30px;
+            border-radius: 28px;
+        }
+
+        .loading-bear-stage {
+            margin-bottom: 2px;
+        }
+
+        #loading-progress {
+            margin-top: 22px;
+            margin-bottom: 12px;
+        }
     }
 
     .error-message {
@@ -121,14 +294,90 @@
         text-align: center;
     }
 
+    .luckysheet_info_detail {
+        padding: 0 20px !important;
+    }
+
+    .luckysheet_info_detail_back,
+    .luckysheet-share-logo,
+    .luckysheet_info_detail_update,
+    .luckysheet_info_detail_save,
+    .luckysheet_info_detail_user {
+        display: none !important;
+    }
+
+    #preview-fullscreen-btn {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        z-index: 1000001;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #1f2937;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+        transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    #preview-fullscreen-btn:hover {
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+        transform: translateY(-1px);
+    }
+
+    #preview-fullscreen-btn:active {
+        transform: translateY(0);
+    }
+
+    #preview-fullscreen-btn .fullscreen-icon {
+        position: relative;
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        flex: none;
+    }
+
+    #preview-fullscreen-btn .fullscreen-icon::before,
+    #preview-fullscreen-btn .fullscreen-icon::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border: 2px solid #4b5563;
+        border-radius: 2px;
+    }
+
+    #preview-shell.is-fullscreen #preview-fullscreen-btn .fullscreen-icon::after {
+        inset: 3px;
+        border-color: #4b5563;
+    }
+
 </style>
 <body>
 <!-- 添加加载遮罩层 -->
 <div id="loading-overlay">
-    <div class="spinner"></div>
-    <div class="loading-text">正在加载Excel文件...</div>
-    <div id="loading-progress">
-        <div id="loading-bar"></div>
+    <div class="loading-card">
+        <div class="loading-bear-stage">
+            <img class="loading-bear-image" src="images/loading-bear.png" alt="正在整理资料" />
+        </div>
+        <div class="loading-title">正在整理资料...</div>
+        <div class="loading-subtitle">文档较大时会先完成渲染，再进入预览。</div>
+        <div class="loading-dots" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div id="loading-progress">
+            <div id="loading-bar"></div>
+        </div>
+        <div class="loading-caption">马上就好啦！</div>
     </div>
 </div>
 
@@ -141,22 +390,16 @@
 
 <div id="lucky-mask-demo" style="position: absolute;z-index: 1000000;left: 0px;top: 0px;bottom: 0px;right: 0px; background: rgba(255, 255, 255, 0.8); text-align: center;font-size: 40px;align-items:center;justify-content: center;display: none;">加载中</div>
 
-<p style="text-align:center;">
-<div id="button-area" style="display: none;">
-    <label><button onclick="tiaozhuan()">跳转HTML预览</button></label>
-    <button id="confirm-button" onclick="print()">打印</button>
+<div id="preview-shell">
+    <button id="preview-fullscreen-btn" type="button" aria-label="全屏预览" title="全屏预览">
+        <span class="fullscreen-icon" aria-hidden="true"></span>
+        <span id="preview-fullscreen-text">全屏</span>
+    </button>
+    <div id="luckysheet"></div>
 </div>
-<div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;left: 0px;top: 20px;bottom: 0px;outline: none;"></div>
 
 <script src="xlsx/luckyexcel.umd.js"></script>
 <script>
-    function tiaozhuan(){
-        var test = window.location.href;
-        test = test.replace(new RegExp("&officePreviewType=xlsx",("gm")),"");
-        test = test+'&officePreviewType=html';
-        window.location.href=test;
-    }
-
     var url = '${finalUrl}';
    	var kkagent = '${kkagent}';
     var baseUrl = '${baseUrl}'.endsWith('/') ? '${baseUrl}' : '${baseUrl}' + '/';
@@ -168,6 +411,12 @@
     let loadingOverlay = document.getElementById("loading-overlay");
     let loadingBar = document.getElementById("loading-bar");
     let errorMessage = document.getElementById("error-message");
+    let previewShell = document.getElementById("preview-shell");
+    let previewFullscreenBtn = document.getElementById("preview-fullscreen-btn");
+    let previewFullscreenText = document.getElementById("preview-fullscreen-text");
+    let isRefreshingPreviewLayout = false;
+    let isReloadingFromTitleClear = false;
+    let titleInputObserver = null;
 
     // 更新加载进度
     function updateProgress(percent) {
@@ -183,13 +432,102 @@
         document.getElementById('error-detail').textContent = message;
     }
 
+    function isPreviewFullscreen() {
+        return document.fullscreenElement === previewShell;
+    }
+
+    function updateFullscreenButton() {
+        var isFullscreen = isPreviewFullscreen();
+        previewShell.classList.toggle('is-fullscreen', isFullscreen);
+        previewFullscreenText.textContent = isFullscreen ? '还原' : '全屏';
+        previewFullscreenBtn.setAttribute('aria-label', isFullscreen ? '还原预览' : '全屏预览');
+        previewFullscreenBtn.setAttribute('title', isFullscreen ? '还原预览' : '全屏预览');
+    }
+
+    function triggerLuckysheetResize() {
+        if (window.luckysheet && typeof window.luckysheet.resize === 'function') {
+            window.luckysheet.resize();
+        }
+    }
+
+    function refreshPreviewLayout() {
+        if (isRefreshingPreviewLayout) {
+            return;
+        }
+        isRefreshingPreviewLayout = true;
+        updateFullscreenButton();
+        triggerLuckysheetResize();
+        setTimeout(triggerLuckysheetResize, 80);
+        setTimeout(triggerLuckysheetResize, 220);
+        setTimeout(() => {
+            isRefreshingPreviewLayout = false;
+        }, 260);
+    }
+
+    function reloadPreviewAfterTitleClear() {
+        if (isReloadingFromTitleClear) {
+            return;
+        }
+        isReloadingFromTitleClear = true;
+        window.location.reload();
+    }
+
+    function handleTitleInputChange(event) {
+        if (!event || !event.target) {
+            return;
+        }
+        if (event.target.value.trim() === '') {
+            reloadPreviewAfterTitleClear();
+        }
+    }
+
+    function bindTitleInputAutoReload() {
+        let titleInput = document.querySelector('.luckysheet_info_detail_input');
+        if (!titleInput || titleInput.dataset.clearReloadBound === 'true') {
+            return;
+        }
+
+        titleInput.dataset.clearReloadBound = 'true';
+        titleInput.addEventListener('input', handleTitleInputChange);
+        titleInput.addEventListener('change', handleTitleInputChange);
+        titleInput.addEventListener('blur', handleTitleInputChange);
+    }
+
+    function observeTitleInput() {
+        bindTitleInputAutoReload();
+        if (titleInputObserver) {
+            return;
+        }
+
+        titleInputObserver = new MutationObserver(function() {
+            bindTitleInputAutoReload();
+        });
+        titleInputObserver.observe(previewShell, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    async function togglePreviewFullscreen() {
+        try {
+            if (isPreviewFullscreen()) {
+                await document.exitFullscreen();
+            } else if (previewShell.requestFullscreen) {
+                await previewShell.requestFullscreen();
+            }
+        } catch (error) {
+            console.error('切换全屏失败:', error);
+        } finally {
+            refreshPreviewLayout();
+        }
+    }
+
     // 隐藏加载动画
     function hideLoading() {
         if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-                document.getElementById('button-area').style.display = 'block';
             }, 300);
         }
     }
@@ -267,12 +605,12 @@
                                     container: 'luckysheet',
                                     lang: "zh",
                                     showtoolbarConfig:{
-                                        image: true,
-                                        print: true,
-                                        exportXlsx: true,
+                                        image: false,
+                                        print: false,
+                                        exportXlsx: false,
                                     },
                                    allowCopy: true, // 是否允许拷贝
-                showtoolbar:  ${xlsxshowtoolbar?string('true','false')},  // 是否显示工具栏
+                showtoolbar: false,  // 仅保留预览内容，隐藏原生工具栏
                 showinfobar: true, // 是否显示顶部信息栏
                 // myFolderUrl: "/",//作用：左上角<返回按钮的链接
                 showsheetbar: true, // 是否显示底部sheet页按钮
@@ -285,7 +623,7 @@
                 showRowBar: true, // 是否显示行号区域
                 showColumnBar: false, // 是否显示列号区域
                 sheetFormulaBar: false, // 是否显示公式栏
-                enableAddBackTop: true,//返回头部按钮
+                enableAddBackTop: false,//隐藏返回头部按钮
                 forceCalculation: false, //下面是导出插件 默认关闭
                                     data: exportJson.sheets,
                                     title: exportJson.info.name,
@@ -293,6 +631,8 @@
                                     // 添加加载完成的回调
                                     hook: {
                                         workbookCreateAfter: function() {
+                                            observeTitleInput();
+                                            refreshPreviewLayout();
                                             resolve();
                                         }
                                     }
@@ -315,18 +655,15 @@
 
     // 页面加载完成后开始异步加载
     document.addEventListener('DOMContentLoaded', function() {
+        previewFullscreenBtn.addEventListener('click', togglePreviewFullscreen);
+        document.addEventListener('fullscreenchange', refreshPreviewLayout);
+        window.addEventListener('resize', refreshPreviewLayout);
+        observeTitleInput();
+
         // 延迟一点时间开始加载，确保DOM完全加载
         setTimeout(() => {
             loadTextAsync();
         }, 100);
-    });
-
-    // 添加取消加载的功能（按ESC键）
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isLoading) {
-            // 可以在这里添加取消加载的逻辑
-            console.log('用户取消了加载');
-        }
     });
 </script>
 </body>

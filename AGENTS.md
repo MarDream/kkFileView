@@ -86,6 +86,28 @@ This runs Spring Boot with resource hot reload using:
 
 For front-end template or CSS/JS edits, prefer `dev.sh` over rebuilding jars repeatedly.
 
+### Windows source startup
+
+When an agent needs to start the application from local source code on Windows, use this route:
+
+1. first verify port `8012` is free
+2. if Docker container `kkfileview` is using `8012`, stop that container before starting source mode
+3. start from the `server/` directory, not the repository root
+4. use Maven `spring-boot:run` with the repository `application.properties`
+
+Canonical command:
+
+```powershell
+cd E:\Project\mygit\kkFileView\server
+mvn spring-boot:run -Dspring-boot.run.addResources=true "-Dspring-boot.run.jvmArguments=-Dfile.encoding=UTF-8 -Dspring.config.location=E:\Project\mygit\kkFileView\server\src\main\config\application.properties"
+```
+
+Important:
+
+- do not assume Docker and source mode can share port `8012`
+- do not start source mode from the repository root unless the command explicitly targets the `server` module
+- when launching through PowerShell wrappers, avoid argument quoting that splits `-Dspring-boot.run.addResources=true` or the `spring-boot.run.jvmArguments` property into invalid Maven lifecycle tokens
+
 ### Jar build
 
 ```bash

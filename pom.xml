@@ -18,11 +18,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- ========== Spring 框架 ========== -->
-        <spring.boot.version>3.5.7</spring.boot.version>
+        <spring.boot.version>4.0.6</spring.boot.version>
 
         <!-- ========== 文档转换和Office处理 ========== -->
         <jodconverter.version>4.4.11</jodconverter.version>
-        <poi.version>5.2.5</poi.version>
+        <poi.version>5.5.1</poi.version>
         <xdocreport.version>1.0.6</xdocreport.version>
         <aspose-cad.version>25.10</aspose-cad.version>
 

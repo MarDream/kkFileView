@@ -2,8 +2,8 @@ package cn.keking.utils;
 
 import cn.keking.config.ConfigConstants;
 import cn.keking.model.FileAttribute;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.TypeFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -243,12 +243,9 @@ public class HttpRequestUtils {
         String cacheKey = "restTemplate_" + System.identityHashCode(httpClient);
 
         return restTemplateCache.computeIfAbsent(cacheKey, key -> {
-            HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-            factory.setHttpClient(httpClient);
+            HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
 
-            // 设置连接超时和读取超时
-            factory.setConnectTimeout(30000);
-            factory.setReadTimeout(30000);
+            // 超时由 HttpClient 的 ConnectionConfig 控制，无需额外设置
 
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.setRequestFactory(factory);
@@ -332,7 +329,7 @@ public class HttpRequestUtils {
             if (StringUtils.hasText(proxyAuthorization)) {
                 Map<String, String> proxyAuthorizationMap = mapper.readValue(
                         proxyAuthorization,
-                        TypeFactory.defaultInstance().constructMapType(Map.class, String.class, String.class)
+                        new TypeReference<Map<String, String>>() {}
                 );
                 proxyAuthorizationMap.forEach((key, value) -> request.getHeaders().set(key, value));
             }

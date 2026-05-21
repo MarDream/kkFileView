@@ -270,6 +270,9 @@ public class CadToPdfService {
 
     private List<String> buildExternalCommand(String sDwgFile, String outFilePath, String cachefilepath,
                                               String cadPreviewType, String cacheName, boolean isWindows) {
+        // 安全检查：验证所有参数不包含命令注入危险字符
+        validateCommandParameters(sDwgFile, outFilePath, cachefilepath, cacheName, cadPreviewType);
+
         List<String> command = new ArrayList<>();
         command.add(isWindows ? cachefilepath + "cadviewer.exe" : "./cadviewer");
         command.add("-i=\"" + sDwgFile + "\"");
@@ -280,6 +283,69 @@ public class CadToPdfService {
         command.add("-xpath=\"" + cachefilepath + "files/\"");
         command.add("-fpath=\"" + cachefilepath + "fonts/\"");
         return command;
+    }
+
+    /**
+     * 验证命令参数的安全性，防止命令注入攻击
+     * 检查参数中是否包含危险字符（引号、管道符、分号等）
+     */
+    private void validateCommandParameters(String inputPath, String outputPath, String cachePath,
+                                            String cacheName, String previewType) {
+        // 检查输入文件路径
+        if (containsCommandInjectionChars(inputPath)) {
+            logger.error("输入文件路径包含危险字符，拒绝执行: {}", sanitizeForLog(inputPath));
+            throw new SecurityException("Invalid input file path: contains dangerous characters");
+        }
+        // 检查输出路径
+        if (containsCommandInjectionChars(outputPath)) {
+            logger.error("输出路径包含危险字符，拒绝执行: {}", sanitizeForLog(outputPath));
+            throw new SecurityException("Invalid output path: contains dangerous characters");
+        }
+        // 检查缓存路径
+        if (containsCommandInjectionChars(cachePath)) {
+            logger.error("缓存路径包含危险字符，拒绝执行: {}", sanitizeForLog(cachePath));
+            throw new SecurityException("Invalid cache path: contains dangerous characters");
+        }
+        // 检查缓存名称
+        if (containsCommandInjectionChars(cacheName)) {
+            logger.error("缓存名称包含危险字符，拒绝执行: {}", sanitizeForLog(cacheName));
+            throw new SecurityException("Invalid cache name: contains dangerous characters");
+        }
+        // 检查预览类型（只允许已知类型）
+        if (!isSupportedPreviewType(previewType)) {
+            logger.error("不支持预览类型: {}", sanitizeForLog(previewType));
+            throw new SecurityException("Unsupported preview type");
+        }
+    }
+
+    /**
+     * 检查字符串是否包含命令注入危险字符
+     */
+    private boolean containsCommandInjectionChars(String str) {
+        if (str == null) {
+            return false;
+        }
+        // 危险字符列表：引号、管道符、分号、反引号、换行符等
+        return str.contains("\"") || str.contains("'") ||
+               str.contains("|") || str.contains(";") ||
+               str.contains("`") || str.contains("\n") ||
+               str.contains("\r") || str.contains("&") ||
+               str.contains("$") || str.contains(">") ||
+               str.contains("<") || str.contains("||") ||
+               str.contains("&&");
+    }
+
+    /**
+     * 为日志输出净化字符串，移除敏感信息
+     */
+    private String sanitizeForLog(String str) {
+        if (str == null) {
+            return "null";
+        }
+        // 只显示前50个字符，防止日志注入
+        String truncated = str.length() > 50 ? str.substring(0, 50) + "..." : str;
+        // 移除控制字符
+        return truncated.replaceAll("[\\p{Cntrl}]", "?");
     }
 
     private boolean validateInputParameters(String inputFilePath, String outputFilePath, String cadPreviewType) {

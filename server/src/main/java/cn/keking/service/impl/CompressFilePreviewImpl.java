@@ -8,15 +8,11 @@ import cn.keking.utils.DownloadUtils;
 import cn.keking.service.FileHandlerService;
 import cn.keking.service.CompressFileReader;
 import cn.keking.utils.KkFileUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.poi.EncryptedDocumentException;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-
-import java.io.IOException;
 
 /**
  * Created by kl on 2018/1/17.
