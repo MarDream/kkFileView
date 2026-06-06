@@ -390,16 +390,65 @@
     let isRefreshingPreviewLayout = false;
     let isReloadingFromTitleClear = false;
     let titleInputObserver = null;
+    let displayedProgress = 0;
+    let progressTarget = 0;
+    let progressAnimationTimer = null;
+    let gentleProgressTimer = null;
+
+    function clampProgress(progress) {
+        return Math.max(0, Math.min(100, Math.round(progress)));
+    }
+
+    function syncProgressAnimation() {
+        if (progressAnimationTimer || !loadingBar) {
+            return;
+        }
+        progressAnimationTimer = setInterval(() => {
+            if (displayedProgress >= progressTarget) {
+                clearInterval(progressAnimationTimer);
+                progressAnimationTimer = null;
+                return;
+            }
+            displayedProgress = Math.min(progressTarget, displayedProgress + Math.max(1, (progressTarget - displayedProgress) * 0.22));
+            loadingBar.style.width = clampProgress(displayedProgress) + '%';
+        }, 120);
+    }
+
+    function stopGentleProgress() {
+        if (gentleProgressTimer) {
+            clearInterval(gentleProgressTimer);
+            gentleProgressTimer = null;
+        }
+    }
+
+    function startGentleProgress(maxPercent, stepPercent, intervalMs) {
+        stopGentleProgress();
+        gentleProgressTimer = setInterval(() => {
+            if (progressTarget >= maxPercent) {
+                stopGentleProgress();
+                return;
+            }
+            updateProgress(progressTarget + stepPercent);
+        }, intervalMs);
+    }
 
     // 更新加载进度
-    function updateProgress(percent) {
-        if (loadingBar) {
-            loadingBar.style.width = percent + '%';
+    function updateProgress(percent, immediate) {
+        const next = clampProgress(percent);
+        progressTarget = immediate ? next : Math.max(progressTarget, next);
+        if (immediate) {
+            displayedProgress = next;
+            if (loadingBar) {
+                loadingBar.style.width = next + '%';
+            }
+        } else {
+            syncProgressAnimation();
         }
     }
 
     // 显示错误信息
     function showError(message) {
+        stopGentleProgress();
         hideLoading();
         errorMessage.style.display = 'block';
         document.getElementById('error-detail').textContent = message;
@@ -483,6 +532,9 @@
         errorMessage.style.display = 'none';
         loadingOverlay.style.display = 'flex';
         loadingOverlay.style.opacity = '1';
+        displayedProgress = 0;
+        progressTarget = 0;
+        updateProgress(8, true);
         loadTextAsync();
     }
 
@@ -491,7 +543,7 @@
         if (isLoading) return;
         
         isLoading = true;
-        updateProgress(10);
+        updateProgress(8, true);
         
         try {
             initWaterMark();
@@ -504,7 +556,8 @@
                 return;
             }
 
-            updateProgress(30);
+            updateProgress(20);
+            startGentleProgress(42, 4, 220);
             
             // 使用异步方式加载
             await new Promise(resolve => setTimeout(resolve, 100)); // 给UI更新一点时间
@@ -512,6 +565,7 @@
             // 或者使用现有的同步方法，但放在setTimeout中避免阻塞
             await transformWithTimeout(value, name);
             
+            stopGentleProgress();
             updateProgress(100);
             
             // 延迟隐藏加载界面，让用户看到加载完成
@@ -530,7 +584,8 @@
     // 使用setTimeout将同步任务拆分
     function transformWithTimeout(value, name) {
         return new Promise((resolve, reject) => {
-            updateProgress(50);
+            updateProgress(46);
+            startGentleProgress(68, 3, 280);
             
             // 将转换过程放在setTimeout中，避免阻塞主线程
             setTimeout(() => {
@@ -541,11 +596,13 @@
                             return;
                         }
                         
-                        updateProgress(80);
+                        stopGentleProgress();
+                        updateProgress(78);
                         
                         // 使用requestAnimationFrame来更新UI，避免阻塞
                         requestAnimationFrame(() => {
                             try {
+                                updateProgress(88);
                                 window.luckysheet.destroy();
                                 window.luckysheet.create({
                                     container: 'luckysheet',
@@ -577,15 +634,14 @@
                                     // 添加加载完成的回调
                                     hook: {
                                         workbookCreateAfter: function() {
+                                            stopGentleProgress();
+                                            updateProgress(100);
                                             observeTitleInput();
                                             refreshPreviewLayout();
                                             resolve();
                                         }
                                     }
                                 });
-                                
-                                updateProgress(90);
-                                
                             } catch (err) {
                                 reject(err);
                             }
@@ -604,6 +660,7 @@
         document.addEventListener('fullscreenchange', refreshPreviewLayout);
         window.addEventListener('resize', refreshPreviewLayout);
         observeTitleInput();
+        updateProgress(8, true);
 
         // 延迟一点时间开始加载，确保DOM完全加载
         setTimeout(() => {

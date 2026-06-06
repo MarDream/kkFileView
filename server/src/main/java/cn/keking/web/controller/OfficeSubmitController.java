@@ -139,6 +139,7 @@ public class OfficeSubmitController {
                 result.put("status", STATUS_CONVERTING);
                 result.put("message", status.getRealTimeMessage());
                 result.put("progress", status.getProgress());
+                result.put("waitingSeconds", status.getWaitingSeconds());
                 break;
             case FAILED:
                 result.put("status", STATUS_FAILED);
@@ -152,6 +153,8 @@ public class OfficeSubmitController {
             default:
                 result.put("status", STATUS_CONVERTING);
                 result.put("message", status.getMessage());
+                result.put("progress", status.getProgress());
+                result.put("waitingSeconds", status.getWaitingSeconds());
                 break;
         }
         return result;

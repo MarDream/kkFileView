@@ -1,111 +1,411 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>${fileName}文件转换中</title>
+  <title>${fileName} 文件处理中</title>
   <style>
-:root{--primary:#3498db;--primary-dark:#2980b9;--secondary:#2c3e50;--light:#ecf0f1;--warning:#f39c12;--gray:#95a5a6;--shadow:0 10px 30px rgba(0,0,0,0.1);--radius:12px;--transition:all 0.3s ease;}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
-  body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;color:var(--secondary);}.container{max-width:600px;width:100%;background-color:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;padding:40px;text-align:center;animation:fadeIn 0.8s ease-out;}@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}
-  to{opacity:1;transform:translateY(0);}}.header{margin-bottom:30px;}.header h1{color:var(--secondary);font-size:28px;margin-bottom:10px;}.subtitle{color:var(--gray);font-size:16px;}.spinner{border:8px solid rgba(52,152,219,0.1);border-top:8px solid var(--primary);border-radius:50%;width:80px;height:80px;animation:spin 1.5s linear infinite;margin:0 auto 30px;}@keyframes spin{0%{transform:rotate(0deg);}
-  100%{transform:rotate(360deg);}}.file-info{background-color:#f8f9fa;border-radius:var(--radius);padding:20px;margin-bottom:30px;text-align:left;border-left:4px solid var(--primary);}.file-info h3{margin-bottom:10px;color:var(--secondary);}.file-name{font-weight:bold;color:var(--primary);word-break:break-all;}.message{font-size:18px;margin-bottom:25px;color:var(--secondary);padding:15px;background-color:#f8f9fa;border-radius:var(--radius);line-height:1.5;}.countdown-section{margin:30px 0;padding:20px;background:linear-gradient(to right,#f8f9fa,#e9ecef);border-radius:var(--radius);}.countdown-text{font-size:16px;margin-bottom:10px;}#countdown{font-weight:bold;font-size:28px;color:var(--primary);display:inline-block;min-width:40px;}.controls{display:flex;justify-content:center;gap:20px;margin-top:30px;flex-wrap:wrap;}.btn{padding:14px 28px;border:none;border-radius:50px;font-weight:600;font-size:16px;cursor:pointer;transition:var(--transition);min-width:180px;}.btn-primary{background-color:var(--primary);color:white;}.btn-primary:hover{background-color:var(--primary-dark);}.btn-secondary{background-color:var(--light);color:var(--secondary);border:2px solid var(--gray);}.btn-secondary:hover{background-color:#e0e0e0;}.footer{margin-top:40px;color:var(--gray);font-size:14px;padding-top:20px;border-top:1px solid#eee;}.tips{background-color:#fff8e1;border-radius:var(--radius);padding:15px;margin-top:25px;font-size:14px;text-align:left;border-left:4px solid var(--warning);}.tips h4{margin-bottom:8px;color:var(--secondary);}.tips ul{padding-left:20px;margin-bottom:0;}.tips li{margin-bottom:5px;}@media(max-width:576px){.container{padding:25px 20px;}.header h1{font-size:24px;}.btn{min-width:100%;}.controls{flex-direction:column;}}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #4f2a12;
+      background:
+        radial-gradient(circle at top, rgba(255, 227, 181, 0.72), rgba(255, 250, 242, 0) 36%),
+        linear-gradient(180deg, #fff7ee 0%, #fffdf9 100%);
+    }
+
+    .loading-card {
+      width: min(760px, calc(100vw - 48px));
+      padding: 36px 44px 40px;
+      border-radius: 40px;
+      background: rgba(255, 252, 246, 0.94);
+      border: 1px solid rgba(243, 207, 153, 0.5);
+      box-shadow:
+        0 24px 64px rgba(212, 146, 58, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .loading-stage {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: min(360px, 100%);
+      margin: 0 auto 10px;
+    }
+
+    .loading-stage::before {
+      content: '';
+      position: absolute;
+      inset: 16px 30px 30px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 196, 96, 0.34), rgba(255, 196, 96, 0) 72%);
+      filter: blur(10px);
+      animation: bearGlow 3s ease-in-out infinite;
+    }
+
+    .loading-image {
+      position: relative;
+      z-index: 1;
+      width: min(300px, 72vw);
+      max-width: 100%;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 22px 26px rgba(201, 135, 52, 0.18));
+      transform-origin: center bottom;
+      animation: bearFloat 3.2s ease-in-out infinite;
+    }
+
+    .loading-file {
+      display: inline-flex;
+      max-width: 100%;
+      margin-bottom: 14px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(232, 206, 165, 0.9);
+      color: #8b5b34;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .loading-title {
+      margin-top: 6px;
+      font-size: clamp(30px, 4vw, 44px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: #4f2a12;
+      letter-spacing: 0.02em;
+    }
+
+    .loading-subtitle {
+      margin-top: 8px;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.8;
+      color: #9b6844;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .loading-meta {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .loading-pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(222, 195, 154, 0.72);
+      color: #8b5b34;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .loading-pill--progress {
+      color: #b95b1d;
+      background: rgba(255, 241, 221, 0.9);
+    }
+
+    .loading-dots {
+      display: inline-flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .loading-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #ffbc68 0%, #ff8a3d 100%);
+      box-shadow: 0 6px 14px rgba(255, 147, 52, 0.28);
+      animation: dotBounce 1.3s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+
+    .loading-dots span:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+
+    .loading-progress {
+      position: relative;
+      width: min(420px, 100%);
+      height: 16px;
+      margin: 28px auto 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 2px solid rgba(175, 128, 90, 0.38);
+      overflow: hidden;
+      box-shadow: inset 0 2px 5px rgba(124, 74, 28, 0.08);
+    }
+
+    .loading-progress__bar {
+      position: relative;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff8f49 0%, #ffb95e 56%, #ffd57a 100%);
+      transition: width 0.35s ease;
+      box-shadow: 0 8px 20px rgba(255, 146, 66, 0.3);
+    }
+
+    .loading-progress__bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -22%;
+      width: 22%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+      transform: skewX(-18deg);
+      animation: progressShine 1.6s linear infinite;
+    }
+
+    .loading-caption {
+      font-size: clamp(24px, 3.6vw, 34px);
+      font-weight: 700;
+      color: #4f2a12;
+      letter-spacing: 0.03em;
+    }
+
+    .loading-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .loading-btn {
+      min-width: 180px;
+      padding: 13px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .loading-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(255, 146, 66, 0.2);
+    }
+
+    .loading-btn--primary {
+      color: #fff;
+      background: linear-gradient(90deg, #ff8f49 0%, #ffb95e 100%);
+    }
+
+    .loading-btn--secondary {
+      color: #8b5b34;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(222, 195, 154, 0.9);
+    }
+
+    .loading-tips {
+      width: min(520px, 100%);
+      margin: 16px auto 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(251, 146, 60, 0.12);
+      border: 1px solid rgba(251, 146, 60, 0.18);
+      color: #b95b1d;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    @keyframes bearFloat {
+      0%, 100% {
+        transform: translateY(0) rotate(-1deg) scale(1);
+      }
+      50% {
+        transform: translateY(-10px) rotate(1.2deg) scale(1.015);
+      }
+    }
+
+    @keyframes bearGlow {
+      0%, 100% {
+        opacity: 0.78;
+        transform: scale(0.98);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.04);
+      }
+    }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.58;
+      }
+      40% {
+        transform: translateY(-7px);
+        opacity: 1;
+      }
+    }
+
+    @keyframes progressShine {
+      0% {
+        transform: translateX(0) skewX(-18deg);
+      }
+      100% {
+        transform: translateX(-520%) skewX(-18deg);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+
+      .loading-card {
+        width: calc(100vw - 32px);
+        padding: 26px 22px 30px;
+        border-radius: 28px;
+      }
+
+      .loading-progress {
+        margin-top: 22px;
+        margin-bottom: 12px;
+      }
+
+      .loading-btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>文件转换中</h1>
-
-      <p class="subtitle">请稍等，我们正在处理您的文件</p>
+  <div class="loading-card">
+    <div class="loading-stage">
+      <img class="loading-image" src="images/loading-bear.png" alt="正在整理资料">
     </div>
-
-    <div class="spinner"></div>
-
-    <div class="file-info">
-      <h3>正在处理的文件</h3>
-
-      <p class="file-name" id="fileName">${fileName}</p>
+    <div class="loading-file">${fileName}</div>
+    <div class="loading-title">正在整理资料...</div>
+    <div class="loading-subtitle" id="loadingMessage">${message}</div>
+    <div class="loading-meta">
+      <span class="loading-pill">将在 <span id="countdown">${time}</span> 秒后自动刷新</span>
+      <span class="loading-pill loading-pill--progress">当前进度 <span id="progressText">0%</span></span>
     </div>
-
-    <div class="message" id="message">
-      ${message}...
+    <div class="loading-dots" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
-
-    <div class="countdown-section">
-      <p class="countdown-text">页面将在<span id="countdown">${time}</span>秒后自动刷新</p>
+    <div class="loading-progress">
+      <div id="loadingBar" class="loading-progress__bar"></div>
     </div>
-
-    <div class="controls">
-      <button class="btn btn-primary" id="refreshBtn">立即刷新</button>
+    <div class="loading-caption">马上就好啦！</div>
+    <div class="loading-actions">
+      <button class="loading-btn loading-btn--primary" id="refreshBtn">立即刷新</button>
+      <button class="loading-btn loading-btn--secondary" id="backBtn">返回上一页</button>
     </div>
-
-    <div class="tips">
-      <h4>提示</h4>
-
-      <ul>
-        <li>文件转换时间取决于文件大小和服务器负载</li>
-
-        <li>转换完成后，页面将自动跳转到预览页面</li>
-
-        <li>您也可以点击&quot;立即刷新&quot;按钮手动检查转换状态</li>
-      </ul>
+    <div class="loading-tips">
+      文件转换时间会受文件大小和服务器负载影响。
+      如果长时间未完成，可以先稍后再试，或联系管理员检查转换服务状态。
     </div>
+  </div>
+  <script>
+    let countdown = ${time};
+    const initialCountdown = Math.max(countdown, 1);
+    let countdownInterval;
 
-    <div class="footer">
-      <p>预计剩余时间:<span id="estimatedTime">约 1 分钟</span></p>
+    const progressBar = document.getElementById('loadingBar');
+    const progressText = document.getElementById('progressText');
+    const messageElement = document.getElementById('loadingMessage');
 
-      <p style="margin-top: 5px;">如有问题，请联系技术支持</p>
-    </div>
-  </div><script>
-let countdown = ${time};
-let countdownInterval;
-
-// 删除forceUpdatedCache参数并更新URL
-function cleanForceUpdateParam() {
-    const url = new URL(window.location.href);
-    const params = new URLSearchParams(url.search);
-    
-    if (params.has('forceUpdatedCache')) {
-        params.delete('forceUpdatedCache');
-        
-        // 构建新的URL
-        const newSearch = params.toString();
-        const newUrl = url.origin + url.pathname + (newSearch ? '?' + newSearch : '');
-        
-        // 使用history.replaceState更新URL而不刷新页面
-        window.history.replaceState({}, document.title, newUrl);
-        console.log('已移除forceUpdatedCache参数，当前URL:', newUrl);
+    function cleanForceUpdateParam() {
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      if (!params.has('forceUpdatedCache')) {
+        return;
+      }
+      params.delete('forceUpdatedCache');
+      const newSearch = params.toString();
+      const newUrl = url.origin + url.pathname + (newSearch ? '?' + newSearch : '');
+      window.history.replaceState({}, document.title, newUrl);
     }
-}
 
-function startCountdown() {
-    const countdownElement = document.getElementById('countdown');
-    countdownInterval = setInterval(() => {
+    function extractProgressFromMessage(message) {
+      if (!message) return null;
+      const matched = message.match(/进度[:：]\s*(\d{1,3})%/);
+      if (!matched) return null;
+      const value = Number(matched[1]);
+      if (Number.isNaN(value)) return null;
+      return Math.max(0, Math.min(100, value));
+    }
+
+    function setProgress(progress) {
+      const percent = Math.max(8, Math.min(96, Math.round(progress)));
+      progressBar.style.width = percent + '%';
+      progressText.textContent = percent + '%';
+    }
+
+    function syncCountdownProgress() {
+      const detectedProgress = extractProgressFromMessage(messageElement.textContent);
+      if (detectedProgress !== null) {
+        const upper = Math.min(96, detectedProgress + 8);
+        const elapsedRatio = (initialCountdown - countdown) / initialCountdown;
+        setProgress(detectedProgress + (upper - detectedProgress) * elapsedRatio);
+        return;
+      }
+      const elapsedRatio = (initialCountdown - countdown) / initialCountdown;
+      setProgress(12 + elapsedRatio * 74);
+    }
+
+    function startCountdown() {
+      const countdownElement = document.getElementById('countdown');
+      syncCountdownProgress();
+      countdownInterval = setInterval(() => {
         if (countdown > 0) {
-            countdown--;
-            countdownElement.textContent = countdown;
-        } else {
-            clearInterval(countdownInterval);
-            window.location.reload();
+          countdown--;
+          countdownElement.textContent = countdown;
+          syncCountdownProgress();
+          return;
         }
-    }, 1000);
-}
+        clearInterval(countdownInterval);
+        setProgress(98);
+        window.location.reload();
+      }, 1000);
+    }
 
-document.getElementById('refreshBtn').addEventListener('click', function() {
-    window.location.reload();
-});
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      setProgress(98);
+      window.location.reload();
+    });
 
-// 页面加载后执行
-window.addEventListener('load', function() {
-    // 先清理URL参数
-    cleanForceUpdateParam();
-    
-    // 然后开始倒计时
-    startCountdown();
-});
-</script>
+    document.getElementById('backBtn').addEventListener('click', function() {
+      window.history.back();
+    });
+
+    window.addEventListener('load', function() {
+      cleanForceUpdateParam();
+      startCountdown();
+    });
+  </script>
 </body>
 </html>

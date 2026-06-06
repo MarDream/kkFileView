@@ -236,6 +236,7 @@ public class FileConvertStatusManager {
         public Status getStatus() { return status; }
         public String getMessage() { return message; }
         public int getProgress() { return progress; }
+        public long getWaitingSeconds() { return waitingSeconds; }
 
         public long getTimestamp() { return timestamp; }
 
