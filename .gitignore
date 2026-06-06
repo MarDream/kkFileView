@@ -30,4 +30,10 @@ nbdist/
 
 server/src/main/cache/
 server/src/main/file/
+server/log/
+log/
+**/__pycache__/
+*.pyc
+*.pyo
+start-claude.bat
 /.mvn

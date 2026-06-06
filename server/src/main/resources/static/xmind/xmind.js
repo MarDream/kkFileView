@@ -250,8 +250,6 @@
                         r.appendChild(n)),
                         n.setAttribute("frameborder", "0"),
                         n.setAttribute("scrolling", "no"),
-                        n.setAttribute("allowfullscreen", "true"),
-                        n.setAttribute("allow", "allowfullscreen"),
                         n.setAttribute("crossorigin", "anonymous"),
                         n.setAttribute("src", t),
                         this.iframe = n

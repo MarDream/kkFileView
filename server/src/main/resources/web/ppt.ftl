@@ -42,11 +42,7 @@
             <!-- FILE NAME HERE -->
             <!-- SIGN UP & SIGN IN -->
 
-            <div class="nav-collapse collapse">
-                <p class="navbar-text pull-right">
-                    <a href="#" title="全屏" class="fullscreen-link"><i class="icon-fullscreen icon-white"></i></a>
-                </p>
-            </div><!--/.nav-collapse -->
+            <div class="nav-collapse collapse"></div><!--/.nav-collapse -->
         </div>
     </div>
 </div>

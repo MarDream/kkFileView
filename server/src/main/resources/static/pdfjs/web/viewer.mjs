@@ -13,6 +13,17 @@ if (kkpdfAutoFetch == "true") {
 function isNotEmpty(value) {
   return value !== null && value !== undefined && value !== '' && value !== 'false' ;
 }
+
+function getWatermarkTexts(text) {
+    return String(text || '')
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(item => item.trim())
+        .filter(item => item !== '');
+}
+
 /**
  * 通用水印生成函数
  * @param {HTMLElement} container   - 水印容器（相对定位的父元素）
@@ -22,13 +33,15 @@ function isNotEmpty(value) {
  */
 function addWatermark(container, watermarkTxt, explicitWidth = null, explicitHeight = null) {
     if (!isNotEmpty(watermarkTxt)) return;
+    const watermarkTexts = getWatermarkTexts(watermarkTxt);
+    if (watermarkTexts.length === 0) return;
 
     // 公共配置
     const settings = {
         start_x: 80,
         start_y: 80,
-        x_space: 80,
-        y_space: 80,
+        x_space: 280,
+        y_space: 180,
         color: 'black',
         alpha: 0.2,
         fontsize: '18px',
@@ -59,7 +72,9 @@ function addWatermark(container, watermarkTxt, explicitWidth = null, explicitHei
         for (let y = settings.start_y; y < maxY; y += settings.y_space) {
             const div = document.createElement('div');
             div.className = 'mask_div';
-            div.appendChild(document.createTextNode(watermarkTxt));
+            const textIndex = (Math.floor((x - settings.start_x) / settings.x_space)
+                + Math.floor((y - settings.start_y) / settings.y_space)) % watermarkTexts.length;
+            div.appendChild(document.createTextNode(watermarkTexts[textIndex]));
             div.style.cssText = `
                 filter: progid:DXImageTransform.Microsoft.Alpha(opacity=${settings.alpha * 100});
                 transform: rotate(-${settings.angle}deg);

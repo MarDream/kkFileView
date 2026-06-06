@@ -7,6 +7,36 @@
     <link rel='stylesheet' href='xlsx/plugins/plugins.css' />
     <link rel='stylesheet' href='xlsx/css/luckysheet.css' />
     <link rel='stylesheet' href='xlsx/assets/iconfont/iconfont.css' />
+    <#-- 静默 luckysheet 上游库的 console.log/warn 噪音,只保留 console.error -->
+    <script>
+        (function () {
+            var noop = function () {};
+            console.log = noop;
+            console.warn = noop;
+        })();
+    </script>
+    <#-- 给 luckysheet 内部动态生成的 form 字段补 id,消除 Chrome DevTools issue 提示 -->
+    <script>
+        (function () {
+            var counter = 0;
+            function autoId(el) {
+                if (!el || el.id || el.name) return;
+                el.id = '__ks_auto_' + (++counter);
+            }
+            function scan(root) {
+                if (!root || root.nodeType !== 1) return;
+                if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(root.tagName)) autoId(root);
+                var children = root.querySelectorAll && root.querySelectorAll('input, button, select, textarea');
+                if (children) for (var i = 0; i < children.length; i++) autoId(children[i]);
+            }
+            new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var added = mutations[i].addedNodes;
+                    for (var j = 0; j < added.length; j++) scan(added[j]);
+                }
+            }).observe(document.documentElement, { childList: true, subtree: true });
+        })();
+    </script>
     <script src="xlsx/plugins/js/plugin.js"></script>
     <script src="xlsx/luckysheet.umd.js"></script>
     <script src="js/watermark.js" type="text/javascript"></script>
@@ -17,19 +47,21 @@
 <#else>
     <#assign finalUrl="${baseUrl}${pdfUrl}">
 </#if>
+<#-- 转义 watermarkTxt 中的换行/回车为 JS 字符串字面量,避免破坏 let 语法 -->
+<#assign watermarkTxtJs = (watermarkTxt?js_string)?replace("\n", "\\n")?replace("\r", "\\r")>
 <script>
     /**
      * 初始化水印
      */
     function initWaterMark() {
-        let watermarkTxt = '${watermarkTxt}';
+        let watermarkTxt = '${watermarkTxtJs}';
         if (watermarkTxt !== '') {
             watermark.init({
-                watermark_txt: '${watermarkTxt}',
+                watermark_txt: watermarkTxt,
                 watermark_x: 0,
                 watermark_y: 0,
                 watermark_rows: 0,
-                watermark_cols: 0,
+                watermark_cols: ${watermarkCols},
                 watermark_x_space: ${watermarkXSpace},
                 watermark_y_space: ${watermarkYSpace},
                 watermark_font: '${watermarkFont}',
@@ -306,59 +338,6 @@
         display: none !important;
     }
 
-    #preview-fullscreen-btn {
-        position: absolute;
-        top: 12px;
-        right: 16px;
-        z-index: 1000001;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        height: 32px;
-        padding: 0 12px;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.96);
-        color: #1f2937;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
-        transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-    }
-
-    #preview-fullscreen-btn:hover {
-        background: #ffffff;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
-        transform: translateY(-1px);
-    }
-
-    #preview-fullscreen-btn:active {
-        transform: translateY(0);
-    }
-
-    #preview-fullscreen-btn .fullscreen-icon {
-        position: relative;
-        width: 14px;
-        height: 14px;
-        display: inline-block;
-        flex: none;
-    }
-
-    #preview-fullscreen-btn .fullscreen-icon::before,
-    #preview-fullscreen-btn .fullscreen-icon::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border: 2px solid #4b5563;
-        border-radius: 2px;
-    }
-
-    #preview-shell.is-fullscreen #preview-fullscreen-btn .fullscreen-icon::after {
-        inset: 3px;
-        border-color: #4b5563;
-    }
-
 </style>
 <body>
 <!-- 添加加载遮罩层 -->
@@ -391,10 +370,6 @@
 <div id="lucky-mask-demo" style="position: absolute;z-index: 1000000;left: 0px;top: 0px;bottom: 0px;right: 0px; background: rgba(255, 255, 255, 0.8); text-align: center;font-size: 40px;align-items:center;justify-content: center;display: none;">加载中</div>
 
 <div id="preview-shell">
-    <button id="preview-fullscreen-btn" type="button" aria-label="全屏预览" title="全屏预览">
-        <span class="fullscreen-icon" aria-hidden="true"></span>
-        <span id="preview-fullscreen-text">全屏</span>
-    </button>
     <div id="luckysheet"></div>
 </div>
 
@@ -412,8 +387,6 @@
     let loadingBar = document.getElementById("loading-bar");
     let errorMessage = document.getElementById("error-message");
     let previewShell = document.getElementById("preview-shell");
-    let previewFullscreenBtn = document.getElementById("preview-fullscreen-btn");
-    let previewFullscreenText = document.getElementById("preview-fullscreen-text");
     let isRefreshingPreviewLayout = false;
     let isReloadingFromTitleClear = false;
     let titleInputObserver = null;
@@ -432,18 +405,6 @@
         document.getElementById('error-detail').textContent = message;
     }
 
-    function isPreviewFullscreen() {
-        return document.fullscreenElement === previewShell;
-    }
-
-    function updateFullscreenButton() {
-        var isFullscreen = isPreviewFullscreen();
-        previewShell.classList.toggle('is-fullscreen', isFullscreen);
-        previewFullscreenText.textContent = isFullscreen ? '还原' : '全屏';
-        previewFullscreenBtn.setAttribute('aria-label', isFullscreen ? '还原预览' : '全屏预览');
-        previewFullscreenBtn.setAttribute('title', isFullscreen ? '还原预览' : '全屏预览');
-    }
-
     function triggerLuckysheetResize() {
         if (window.luckysheet && typeof window.luckysheet.resize === 'function') {
             window.luckysheet.resize();
@@ -455,7 +416,6 @@
             return;
         }
         isRefreshingPreviewLayout = true;
-        updateFullscreenButton();
         triggerLuckysheetResize();
         setTimeout(triggerLuckysheetResize, 80);
         setTimeout(triggerLuckysheetResize, 220);
@@ -506,20 +466,6 @@
             childList: true,
             subtree: true
         });
-    }
-
-    async function togglePreviewFullscreen() {
-        try {
-            if (isPreviewFullscreen()) {
-                await document.exitFullscreen();
-            } else if (previewShell.requestFullscreen) {
-                await previewShell.requestFullscreen();
-            }
-        } catch (error) {
-            console.error('切换全屏失败:', error);
-        } finally {
-            refreshPreviewLayout();
-        }
     }
 
     // 隐藏加载动画
@@ -655,7 +601,6 @@
 
     // 页面加载完成后开始异步加载
     document.addEventListener('DOMContentLoaded', function() {
-        previewFullscreenBtn.addEventListener('click', togglePreviewFullscreen);
         document.addEventListener('fullscreenchange', refreshPreviewLayout);
         window.addEventListener('resize', refreshPreviewLayout);
         observeTitleInput();

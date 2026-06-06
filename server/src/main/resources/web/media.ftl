@@ -37,7 +37,7 @@
 				padding: 50px;
 				display: none;
 			}
-     .video{
+			.video{
 		width: 100%; 
 		height: 600px;
 		max-width: 900px;  
@@ -49,6 +49,11 @@
        right: 0;
      background-color: green;
 			}
+            .ckplayer-ckplayer .ck-main .ck-bar .ck-bar-fullandexit,
+            .ckplayer-ckplayer .ck-main .ck-bar .ck-bar-webfullandexit,
+            .ckplayer-ckplayer .ck-main .ck-yytf .ck-yytf-bottom .ck-yytf-fullandexit {
+                display: none !important;
+            }
 		</style>
 	</head>
 	<body>
@@ -69,7 +74,8 @@
                 loop: false,//是否需要循环播放
                 rightBar:true,
                 screenshot:true,//截图功能是否开启
-                webFull:true,//是否启用页面全屏按钮，默认不启用
+                webFull:false,//禁用内部页面全屏按钮，统一使用外层全屏
+                theatre:false,
 				//poster:'ckplayer/poster.png',//封面图片
 				menu:[
 			{

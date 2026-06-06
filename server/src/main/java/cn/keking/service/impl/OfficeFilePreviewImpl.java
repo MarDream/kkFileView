@@ -137,9 +137,63 @@ public class OfficeFilePreviewImpl implements FilePreview {
     }
 
     /**
-     * 启动异步Office转换
+     * 提交异步 office 转码任务（不阻塞）。
+     *
+     * <p>适用于大文件预览场景。调用方拿到 taskId (即 cacheName) 后通过
+     * {@link FileConvertStatusManager#getConvertStatus(String)} 轮询状态，
+     * 转码完成后可直接打开 {@code /onlinePreview?url=...} 重新进入预览。</p>
+     *
+     * <p>缓存命中时该方法不启动异步转码；调用方应通过 FileConvertStatusManager
+     * 拿到 SUCCESS 状态后直接使用 cacheName 渲染。</p>
+     *
+     * <p>xlsx/csv 在 officeType=web 模式下走 kkFileView 自带的 luckyexcel / CSV 渲染页
+     * （不经过 LibreOffice 转码），无需启动异步任务，直接返回 cacheName 即可。</p>
+     *
+     * @return taskId (等同 cacheName)
      */
-    private void startAsyncOfficeConversion(String filePath, String outFilePath, String cacheName,
+    public String submitAsyncOfficeTask(FileAttribute fileAttribute) {
+        String suffix = fileAttribute.getSuffix();
+        String cacheName = fileAttribute.getCacheName();
+        String outFilePath = fileAttribute.getOutFilePath();
+        String fileName = fileAttribute.getName();
+        String officePreviewType = fileAttribute.getOfficePreviewType();
+        boolean forceUpdatedCache = fileAttribute.forceUpdatedCache();
+
+        // xlsx/csv 走 kkFileView 自身的 web 渲染页（luckyexcel / 原生 CSV），不启动 LibreOffice 转码
+        boolean skipConvert = ConfigConstants.getOfficeTypeWeb() != null
+                && ConfigConstants.getOfficeTypeWeb().equalsIgnoreCase("web")
+                && ("xlsx".equalsIgnoreCase(suffix) || "csv".equalsIgnoreCase(suffix));
+        if (skipConvert) {
+            return cacheName;
+        }
+
+        // 缓存命中：直接标记完成（轮询端点会返回 status=2）
+        if (!forceUpdatedCache
+                && ConfigConstants.isCacheEnabled()
+                && fileHandlerService.listConvertedFiles().containsKey(cacheName)) {
+            return cacheName;
+        }
+
+        // 标记转换中（轮询端点会返回 status=0）
+        FileConvertStatusManager.startConvert(cacheName);
+
+        // 下载远程文件到本地
+        ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+        if (response.isFailure()) {
+            FileConvertStatusManager.markError(cacheName, "下载文件失败: " + response.getMsg());
+            return cacheName;
+        }
+        String filePath = response.getContent();
+
+        // 启动后台转码（沿用现有 LibreOffice 异步转码 + 状态机）
+        startAsyncOfficeConversion(filePath, outFilePath, cacheName, fileAttribute, officePreviewType);
+        return cacheName;
+    }
+
+    /**
+     * 启动异步Office转换（公共：供 submitAsyncOfficeTask 复用）
+     */
+    public void startAsyncOfficeConversion(String filePath, String outFilePath, String cacheName,
                                             FileAttribute fileAttribute,
                                             String officePreviewType) {
         // 启动异步转换

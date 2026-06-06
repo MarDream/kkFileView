@@ -116,7 +116,7 @@
     var viewerUrl = baseUrl + "pdfjs/web/viewer.html?file=" + encodeURIComponent(url);
 	var watermarkEncoded = encodeURIComponent('${watermarkTxt?js_string}');
     var highlightEncoded = encodeURIComponent('${highlightall?js_string}');
-    viewerUrl += "&disablepresentationmode=${pdfPresentationModeDisable}";
+    viewerUrl += "&disablepresentationmode=true";
     viewerUrl += "&disableopenfile=${pdfOpenFileDisable}";
     viewerUrl += "&disableprint=${pdfPrintDisable}";
     viewerUrl += "&disabledownload=${pdfDownloadDisable}";

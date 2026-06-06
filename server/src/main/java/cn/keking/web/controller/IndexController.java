@@ -21,11 +21,6 @@ public class IndexController {
         return "/main/record";
     }
 
-    @GetMapping( "/sponsor")
-    public String go2Sponsor(){
-        return "/main/sponsor";
-    }
-
     @GetMapping( "/integrated")
     public String go2Integrated(){
         return "/main/integrated";

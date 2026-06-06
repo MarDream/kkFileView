@@ -65,6 +65,7 @@
             navbar: false,
             button: false,
             backdrop: false,
+            fullscreen: false,
             loop: true,
         });
         viewer.view(0); // 0 是图片的索引，如果你想点击第一张图片，索引为 0

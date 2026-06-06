@@ -1,6 +1,7 @@
 package cn.keking;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +20,9 @@ public class ServerMain {
     private static final Logger logger = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
+        // 解除 POI 读取 OOXML 文件的 100MB 限制
+        IOUtils.setByteArrayMaxOverride(500 * 1024 * 1024);
+
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         ConfigurableApplicationContext context = new SpringApplicationBuilder(ServerMain.class)

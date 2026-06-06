@@ -102,6 +102,12 @@ public class AttributeSetFilter implements Filter {
             watermarkAngle =null;
         }
         request.setAttribute("watermarkAngle", watermarkAngle != null ? watermarkAngle : WatermarkConfigConstants.getWatermarkAngle());
+        // 水印列数(水平方向),默认 3 列
+        String watermarkCols = KkFileUtils.htmlEscape(request.getParameter("watermarkCols"));
+        if (!KkFileUtils.isInteger(watermarkCols)){
+            watermarkCols = null;
+        }
+        request.setAttribute("watermarkCols", watermarkCols != null ? watermarkCols : "3");
     }
 
     @Override

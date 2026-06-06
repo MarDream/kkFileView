@@ -35,24 +35,6 @@ $(document).ready(function () {
     }
     clearProgress();
 
-    // 是否显示全屏按钮
-    $('.fullscreen-link').toggle(screenfull.enabled);
-    // 全屏事件
-    $('.fullscreen-link').click(function () {
-        if (screenfull.enabled) {
-            screenfull.toggle($('.slide-img-container')[0]);
-        }
-    });
-    $(document).bind("fullscreenchange", function () {
-        if (screenfull.isFullscreen) {
-            $('.slide-img-container').css('background-color', 'black');
-            $('.slide-img-container').contextMenu(true);
-        } else {
-            $('.slide-img-container').css('background-color', '');
-            $('.slide-img-container').contextMenu(false);
-        }
-    });
-
     $('.select-page-selector').change(function () {
         var selectNum = $(".select-page-selector option:selected").text();
         gotoSlide(selectNum);
@@ -79,13 +61,6 @@ $(document).ready(function () {
                 name: "上一张",
                 callback: function(key, options) {
                     preSlide();
-                }
-            },
-            "sep1": "---------",
-            "exit": {
-                name: "结束放映",
-                callback: function(key, options) {
-                    $('.slide-img-container').fullScreen(false);
                 }
             },
         }
@@ -192,10 +167,6 @@ function resetImgSize() {
     }
     var ww = $(window).width() - 120 - leftW;
     var wh = $(window).height() - 90;
-    if (screenfull.isFullscreen) {
-        ww = ww + 90 + leftW;
-        wh = wh + 80;
-    }
     if (wh / ww < ratio) {
         $('.slide-img-container').height(wh);
         $('.slide-img-container').width(wh / ratio);
@@ -210,8 +181,6 @@ $(document).keydown(function (event) {
         preSlide();
     } else if (event.keyCode == 39 || event.keyCode == 40 || event.keyCode == 32 || event.keyCode == 34) {	// 39 right, 40 down, 32 space, 34 pageDown
         nextSlide();
-    } else if (event.keyCode == 13) {
-        screenfull.toggle($('.slide-img-container')[0]);
     }
 });
 

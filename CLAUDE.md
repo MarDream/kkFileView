@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-kkFileView 是一个基于 Spring Boot 3.5.6 + Freemarker 的文件在线预览服务，支持 20+ 种文档格式（Office、PDF、CAD、图片、音视频、压缩包、3D 模型等）。项目使用 Java 21，采用 Maven 多模块结构（单 `server` 子模块）。
+kkFileView 是一个基于 Spring Boot 4.0.6 + Freemarker 的文件在线预览服务，支持 20+ 种文档格式（Office、PDF、CAD、图片、音视频、压缩包、3D 模型等）。项目使用 Java 25，采用 Maven 多模块结构（单 `server` 子模块）。
 
 ## Build & Run Commands
 

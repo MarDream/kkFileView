@@ -74,7 +74,6 @@
             <li class="active"><a href="./index">首页</a></li>
             <li><a href="./integrated">接入说明</a></li>
             <li><a href="./record">版本发布记录</a></li>
-            <li><a href="./sponsor">赞助开源</a></li>
             <li><a href="./contact">技术支持</a></li>
         </ul>
     </div>
@@ -96,7 +95,6 @@
                         <a class="hero-link primary" href="#demo-lab">开始体验</a>
                         <a class="hero-link secondary" href="./integrated">查看接入说明</a>
                         <a class="hero-link secondary" href="./record">版本发布记录</a>
-                        <a class="hero-link secondary" href="./sponsor">赞助开源</a>
                     </div>
                         </div>
                         <div class="home-hero-side">
