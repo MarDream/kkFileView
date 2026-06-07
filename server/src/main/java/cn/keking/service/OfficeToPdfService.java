@@ -11,10 +11,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author yudian-it
@@ -36,6 +40,69 @@ public class OfficeToPdfService {
         if (!outputFile.getParentFile().exists() && !outputFile.getParentFile().mkdirs()) {
             logger.error("创建目录【{}】失败，请检查目录权限！",outputFilePath_end);
         }
+
+        // 处理文件名编码问题：使用临时安全文件名进行转换
+        File tempOutputFile = createTempOutputFile(outputFilePath_end);
+        File finalOutputFile = outputFile;
+
+        try {
+            doConvert(inputFile, tempOutputFile, fileAttribute);
+
+            // 转换成功后，将临时文件复制到目标位置
+            Files.copy(tempOutputFile.toPath(), finalOutputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            // 删除临时文件
+            Files.deleteIfExists(tempOutputFile.toPath());
+
+            // 计算转换耗时
+            Instant endTime = Instant.now();
+            Duration duration = Duration.between(startTime, endTime);
+
+            // 格式化显示耗时（支持不同时间单位）
+            String durationFormatted;
+            if (duration.toMinutes() > 0) {
+                durationFormatted = String.format("%d分%d秒", duration.toMinutes(), duration.toSecondsPart());
+            } else if (duration.toSeconds() > 0) {
+                durationFormatted = String.format("%d.%03d秒",duration.toSeconds(), duration.toMillisPart());
+            } else {
+                durationFormatted = String.format("%d毫秒", duration.toMillis());
+            }
+
+            logger.info("文件转换成功：{} -> {}，耗时：{}",
+                    inputFile.getName(), finalOutputFile.getName(), durationFormatted);
+
+        } catch (IOException e) {
+            Instant endTime = Instant.now();
+            Duration duration = Duration.between(startTime, endTime);
+            logger.error("文件复制或删除失败：{}，已耗时：{}毫秒，错误信息：{}", inputFile.getName(), duration.toMillis(), e.getMessage());
+            throw new OfficeException("文件处理失败: " + e.getMessage(), e);
+        } catch (OfficeException e) {
+            // 转换失败时清理临时文件
+            try {
+                Files.deleteIfExists(tempOutputFile.toPath());
+            } catch (IOException ignored) {
+                // 忽略删除临时文件的错误
+            }
+            Instant endTime = Instant.now();
+            Duration duration = Duration.between(startTime, endTime);
+            logger.error("文件转换失败：{}，已耗时：{}毫秒，错误信息：{}", inputFile.getName(), duration.toMillis(), e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * 创建临时输出文件，使用安全的临时文件名避免中文和特殊字符问题
+     */
+    private static File createTempOutputFile(String outputFilePath) {
+        String parentPath = new File(outputFilePath).getParent();
+        String extension = getPostfix(outputFilePath);
+        String tempFileName = UUID.randomUUID().toString() + "." + extension;
+        return new File(parentPath, tempFileName);
+    }
+
+    /**
+     * 执行实际的转换操作
+     */
+    private static void doConvert(File inputFile, File outputFile, FileAttribute fileAttribute) throws OfficeException {
         LocalConverter.Builder builder;
         Map<String, Object> filterData = new HashMap<>();
         filterData.put("EncryptFile", true);
@@ -71,28 +138,8 @@ public class OfficeToPdfService {
 
         try {
             builder.build().convert(inputFile).to(outputFile).execute();
-
-            // 计算转换耗时
-            Instant endTime = Instant.now();
-            Duration duration = Duration.between(startTime, endTime);
-
-            // 格式化显示耗时（支持不同时间单位）
-            String durationFormatted;
-            if (duration.toMinutes() > 0) {
-                durationFormatted = String.format("%d分%d秒", duration.toMinutes(), duration.toSecondsPart());
-            } else if (duration.toSeconds() > 0) {
-                durationFormatted = String.format("%d.%03d秒",duration.toSeconds(), duration.toMillisPart());
-            } else {
-                durationFormatted = String.format("%d毫秒", duration.toMillis());
-            }
-
-            logger.info("文件转换成功：{} -> {}，耗时：{}",
-                    inputFile.getName(),outputFile.getName(),  durationFormatted);
-
         } catch (OfficeException e) {
-            Instant endTime = Instant.now();
-            Duration duration = Duration.between(startTime, endTime);
-            logger.error("文件转换失败：{}，已耗时：{}毫秒，错误信息：{}", inputFile.getName(), duration.toMillis(), e.getMessage());
+            logger.error("Office转换失败：{} -> {}", inputFile.getName(), outputFile.getName(), e);
             throw e;
         }
     }

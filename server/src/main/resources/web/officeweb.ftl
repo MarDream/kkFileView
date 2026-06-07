@@ -7,6 +7,8 @@
     <link rel='stylesheet' href='xlsx/plugins/plugins.css' />
     <link rel='stylesheet' href='xlsx/css/luckysheet.css' />
     <link rel='stylesheet' href='xlsx/assets/iconfont/iconfont.css' />
+    <#-- 预加载字体文件，避免 Slow network 警告 -->
+    <link rel="preload" href="xlsx/fonts/fontawesome-webfont.woff2?v=4.7.0" as="font" type="font/woff2" crossorigin>
     <#-- 静默 luckysheet 上游库的 console.log/warn 噪音,只保留 console.error -->
     <script>
         (function () {
