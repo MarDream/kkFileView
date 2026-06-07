@@ -9,7 +9,7 @@
  => Java Version            ::  ${java.version}
  => Spring Boot             ::  ${spring-boot.version}
  => kkFileView              ::  5.0
- => Home site               ::  https://kkview.cn
- => Github                  ::  https://github.com/kekingcn/kkFileView
- => Gitee                   ::  https://gitee.com/kekingcn/file-online-preview
- => kk opensource community ::  https://t.zsxq.com/09ZHSXbsQ
+ => Home site               ::  https://github.com/MarDream/kkFileView.git
+ => Github                  ::  https://github.com/MarDream/kkFileView.git
+ => Gitee                   ::  https://github.com/MarDream/kkFileView.git
+ => kk opensource community ::  https://github.com/MarDream/kkFileView.git

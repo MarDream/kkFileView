@@ -1,6 +1,0 @@
-*.css linguist-language=java
-*.less linguist-language=java
-*.js linguist-language=java
-*.html linguist-language=java
-*.* linguist-language=java
-lib/*.tar.gz filter=lfs diff=lfs merge=lfs -text

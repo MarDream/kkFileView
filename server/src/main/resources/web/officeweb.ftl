@@ -48,7 +48,9 @@
     <#assign finalUrl="${baseUrl}${pdfUrl}">
 </#if>
 <#-- 转义 watermarkTxt 中的换行/回车为 JS 字符串字面量,避免破坏 let 语法 -->
-<#assign watermarkTxtJs = (watermarkTxt?js_string)?replace("\n", "\\n")?replace("\r", "\\r")>
+<#-- 必须先替换再 js_string，否则替换无效 -->
+<#assign watermarkTxtEscaped = (watermarkTxt!'')?replace('\n', '\\n')?replace('\r', '\\r')>
+<#assign watermarkTxtJs = watermarkTxtEscaped?js_string>
 <script>
     /**
      * 初始化水印
