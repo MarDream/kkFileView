@@ -1,0 +1,64 @@
+# kkFileView standalone image.
+# 基于官方 eclipse-temurin JRE + apt-get 安装 LibreOffice。
+# 完全独立部署，不依赖任何团队内部集成镜像。
+
+ARG KKFILEVIEW_VERSION=5.0.0
+
+FROM eclipse-temurin:25-jre-jammy
+ARG KKFILEVIEW_VERSION
+
+ENV KKFILEVIEW_VERSION=${KKFILEVIEW_VERSION} \
+    KKFILEVIEW_HOME=/opt/kkFileView-${KKFILEVIEW_VERSION} \
+    KKFILEVIEW_BIN_FOLDER=/opt/kkFileView-${KKFILEVIEW_VERSION}/bin \
+    KK_OFFICE_HOME=/usr/lib/libreoffice \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# 安装 LibreOffice（核心 + 常用转换组件）+ 中文字体 + 字体替换工具
+# --no-install-recommends 减少镜像体积
+# fonts-noto-cjk 解决 PPT 模板自定义字体（如微软雅黑、苹方）转 PDF 时变方框（tofu）的问题
+# zip/unzip 用于在构建时替换 jar 内的 pdf.ftl 模板
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libreoffice-core \
+        libreoffice-common \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
+        fonts-noto-cjk \
+        zip \
+        unzip \
+        curl \
+        ca-certificates \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 拷入并解压 kkFileView 应用
+COPY server/target/kkFileView-${KKFILEVIEW_VERSION}.tar.gz /tmp/kkFileView.tar.gz
+RUN tar -xzf /tmp/kkFileView.tar.gz -C /opt && \
+    rm /tmp/kkFileView.tar.gz
+
+# 替换 jar 内的 pdf.ftl 模板：用浏览器原生 PDF viewer 替代 PDF.js viewer
+# 原因：PDF.js viewer 解析 LibreOffice 嵌入的 NotoSansCJK 字体子集时 CMap 错乱，
+#      中文字符 fallback 成单字符（"海""黄"），浏览器原生 viewer 正常渲染。
+# 注意：不能用 zip -j（会丢掉路径），必须保留完整路径 BOOT-INF/classes/web/pdf.ftl
+#      才能覆盖 jar 内的同路径文件
+COPY scripts/pdf-direct.ftl /tmp/pdf-direct.ftl
+RUN cd /opt/kkFileView-${KKFILEVIEW_VERSION}/bin && \
+    mkdir -p /tmp/ftl-extract/BOOT-INF/classes/web && \
+    unzip -o kkFileView-${KKFILEVIEW_VERSION}.jar BOOT-INF/classes/web/pdf.ftl -d /tmp/ftl-extract && \
+    cp /tmp/pdf-direct.ftl /tmp/ftl-extract/BOOT-INF/classes/web/pdf.ftl && \
+    cd /tmp/ftl-extract && \
+    zip /opt/kkFileView-${KKFILEVIEW_VERSION}/bin/kkFileView-${KKFILEVIEW_VERSION}.jar \
+        BOOT-INF/classes/web/pdf.ftl && \
+    rm -rf /tmp/ftl-extract /tmp/pdf-direct.ftl
+
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 8012
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=60s \
+    CMD curl -fsS http://localhost:8012/ || exit 1
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
