@@ -26,7 +26,25 @@ mvn -B package -Dmaven.test.skip=true --file pom.xml
 
 # 生产启动（Windows）
 server\src\main\bin\startup.bat
+
+# 构建 Docker 容器镜像（默认 Dockerfile.standalone，推荐）
+./scripts/build-docker.sh 5.0.1
+
+# 构建原始上游镜像（omnidoc 基础镜像，无 CJK 字体，原始 PDF.js viewer）
+./scripts/build-docker.sh 5.0.0 Dockerfile
 ```
+
+### Docker 镜像说明
+
+| Dockerfile | 用途 | CJK 字体 | PDF viewer |
+|------------|------|----------|------------|
+| `Dockerfile.standalone` (默认) | 独立容器化部署，eclipse-temurin:25-jre-jammy + LibreOffice + fonts-noto-cjk + pdf-direct.ftl 浏览器原生 viewer | ✅ 完整 | 浏览器原生 |
+| `Dockerfile` | 上游 kkFileView 官方镜像（omnidoc:1.0.2-optimized + ES JDK），依赖宿主机挂载 JDK/LibreOffice | ❌ 无 | PDF.js |
+| `Dockerfile.local` | 旧版内部调试镜像 | ❌ 无 | PDF.js |
+
+⚠️ **demand_system / 5.0.0+ 集成必须用 `Dockerfile.standalone`**，否则：
+- PPT/Word 转 PDF 后中文会变方框（容器内无 CJK 字体）
+- PDF.js viewer 解析 NotoSansCJK 字体子集时 CMap 错乱（"海"/"黄"重复字符）
 
 ## Architecture
 

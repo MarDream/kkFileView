@@ -114,6 +114,18 @@ Important:
 mvn -q -pl server -DskipTests package
 ```
 
+### Docker build
+
+```bash
+# Default: standalone image (CJK fonts + browser-native PDF viewer)
+./scripts/build-docker.sh 5.0.1
+
+# Upstream image (omnidoc base, no CJK fonts, original PDF.js viewer)
+./scripts/build-docker.sh 5.0.0 Dockerfile
+```
+
+`Dockerfile.standalone` is the image required for `demand_system` (5.0.0+) and any deployment that previews Office files containing CJK characters. Do not rebuild with the upstream `Dockerfile` for that integration path or PPT/Word will render as tofu boxes.
+
 ### Main test command used in CI
 
 ```bash
