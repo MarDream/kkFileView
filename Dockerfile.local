@@ -1,26 +1,30 @@
-# kkFileView runtime image.
-# JDK, LibreOffice, fonts, and other middleware are supplied at container startup
-# through bind mounts and environment variables instead of being baked in.
-
 ARG KKFILEVIEW_VERSION=5.0.0
 
-FROM ubuntu:24.04 AS unpack
+FROM elasticsearch:8.17.0 AS jdk
+
+FROM omnidoc:1.0.2-optimized AS unpack
 ARG KKFILEVIEW_VERSION
 
 COPY server/target/kkFileView-${KKFILEVIEW_VERSION}.tar.gz /tmp/kkFileView.tar.gz
 RUN tar -xzf /tmp/kkFileView.tar.gz -C /opt
 
-FROM ubuntu:24.04
+FROM omnidoc:1.0.2-optimized
 ARG KKFILEVIEW_VERSION
 
 ENV KKFILEVIEW_VERSION=${KKFILEVIEW_VERSION} \
     KKFILEVIEW_HOME=/opt/kkFileView-${KKFILEVIEW_VERSION} \
     KKFILEVIEW_BIN_FOLDER=/opt/kkFileView-${KKFILEVIEW_VERSION}/bin \
+    KK_JAVA_HOME=/opt/jdk \
+    KK_OFFICE_HOME=/usr/lib/libreoffice \
+    JAVA_HOME=/opt/jdk \
+    PATH=/opt/jdk/bin:${PATH} \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
+COPY --from=jdk /usr/share/elasticsearch/jdk /opt/jdk
 COPY --from=unpack /opt/kkFileView-${KKFILEVIEW_VERSION} /opt/kkFileView-${KKFILEVIEW_VERSION}
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8012

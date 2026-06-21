@@ -1,0 +1,15 @@
+.git
+.idea
+.vscode
+*.log
+
+ubuntu-*.tar
+jdk-*.tar.gz
+kkfileview-*-offline.tar
+kkfileview-base
+
+server/LibreOfficePortable
+server/target/*
+!server/target/kkFileView-*.tar.gz
+server/src/main/log
+tests/e2e/node_modules
