@@ -276,6 +276,12 @@ public class ConfigRefreshComponent {
         ConfigConstants.setXlsxShowtoolbarValue(Boolean.parseBoolean(getProperty(properties, "kk.xlsxshowtoolbar", ConfigConstants.DEFAULT_XLSX_SHOW_TOOLBAR)));
         ConfigConstants.setisShowKeyValue(Boolean.parseBoolean(getProperty(properties, "kk.isshowkey", ConfigConstants.DEFAULT_IS_SHOW_KEY)));
         ConfigConstants.setscriptJsValue(Boolean.parseBoolean(getProperty(properties, "kk.scriptjs", ConfigConstants.DEFAULT_SCRIPT_JS)));
+
+        // 24. 在线协作功能配置
+        ConfigConstants.setCollaborationShareEnabledValue(Boolean.parseBoolean(getProperty(properties, "collaboration.share.enabled", ConfigConstants.DEFAULT_COLLABORATION_SHARE_ENABLED)));
+        ConfigConstants.setCollaborationEditEnabledValue(Boolean.parseBoolean(getProperty(properties, "collaboration.edit.enabled", ConfigConstants.DEFAULT_COLLABORATION_EDIT_ENABLED)));
+        ConfigConstants.setCollaborationAnnotationEnabledValue(Boolean.parseBoolean(getProperty(properties, "collaboration.annotation.enabled", ConfigConstants.DEFAULT_COLLABORATION_ANNOTATION_ENABLED)));
+        ConfigConstants.setShareDefaultTtlValue(Integer.parseInt(getProperty(properties, "collaboration.share.default-ttl-hours", ConfigConstants.DEFAULT_SHARE_DEFAULT_TTL)));
     }
 
     private String getProperty(Properties properties, String key, String defaultValue) {

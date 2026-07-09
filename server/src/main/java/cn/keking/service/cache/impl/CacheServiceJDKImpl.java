@@ -1,5 +1,8 @@
 package cn.keking.service.cache.impl;
 
+import cn.keking.model.collaboration.Annotation;
+import cn.keking.model.collaboration.OnlineUser;
+import cn.keking.model.collaboration.ShareLink;
 import cn.keking.service.cache.CacheService;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.Weighers;
@@ -9,10 +12,14 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @auther: chenjh
@@ -27,6 +34,10 @@ public class CacheServiceJDKImpl implements CacheService {
     private Map<String, List<String>> imgCache;
     private Map<String, Integer> pdfImagesCache;
     private Map<String, String> mediaConvertCache;
+    private final Map<String, ShareLink> shareLinkCache = new ConcurrentHashMap<>();
+    private final Map<String, List<Annotation>> annotationCache = new ConcurrentHashMap<>();
+    private final Map<String, Set<OnlineUser>> onlineUserCache = new ConcurrentHashMap<>();
+    private final Map<String, String> docLockCache = new ConcurrentHashMap<>();
     private static final int QUEUE_SIZE = 500000;
     private final BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 
@@ -140,6 +151,82 @@ public class CacheServiceJDKImpl implements CacheService {
         mediaConvertCache = new ConcurrentLinkedHashMap.Builder<String, String>()
                 .maximumWeightedCapacity(capacity).weigher(Weighers.singleton())
                 .build();
+    }
+
+    @Override
+    public void addShareLink(String token, ShareLink link) {
+        shareLinkCache.put(token, link);
+    }
+
+    @Override
+    public ShareLink getShareLink(String token) {
+        return shareLinkCache.get(token);
+    }
+
+    @Override
+    public void removeShareLink(String token) {
+        shareLinkCache.remove(token);
+    }
+
+    @Override
+    public Map<String, ShareLink> getAllShareLinks() {
+        return Collections.unmodifiableMap(shareLinkCache);
+    }
+
+    @Override
+    public void putAnnotations(String fileKey, List<Annotation> annotations) {
+        annotationCache.put(fileKey, annotations);
+    }
+
+    @Override
+    public List<Annotation> getAnnotations(String fileKey) {
+        return annotationCache.getOrDefault(fileKey, Collections.emptyList());
+    }
+
+    @Override
+    public void removeAnnotations(String fileKey) {
+        annotationCache.remove(fileKey);
+    }
+
+    @Override
+    public void addOnlineUser(String sessionId, OnlineUser user) {
+        onlineUserCache.computeIfAbsent(sessionId, k -> ConcurrentHashMap.newKeySet()).add(user);
+    }
+
+    @Override
+    public void removeOnlineUser(String sessionId, String userSessionId) {
+        Set<OnlineUser> users = onlineUserCache.get(sessionId);
+        if (users != null) {
+            users.removeIf(u -> userSessionId.equals(u.getSessionId()));
+        }
+    }
+
+    @Override
+    public Set<OnlineUser> getOnlineUsers(String sessionId) {
+        return onlineUserCache.getOrDefault(sessionId, Collections.emptySet());
+    }
+
+    @Override
+    public boolean tryLockDocument(String fileKey, String lockOwner, long ttlSeconds) {
+        String currentOwner = docLockCache.get(fileKey);
+        if (currentOwner == null || currentOwner.equals(lockOwner)) {
+            docLockCache.put(fileKey, lockOwner);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void unlockDocument(String fileKey, String lockOwner) {
+        String currentOwner = docLockCache.get(fileKey);
+        if (lockOwner.equals(currentOwner)) {
+            docLockCache.remove(fileKey);
+        }
+    }
+
+    @Override
+    public String getDocumentLockOwner(String fileKey) {
+        return docLockCache.get(fileKey);
     }
 
 }

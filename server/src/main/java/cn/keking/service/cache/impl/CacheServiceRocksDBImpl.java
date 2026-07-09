@@ -1,5 +1,8 @@
 package cn.keking.service.cache.impl;
 
+import cn.keking.model.collaboration.Annotation;
+import cn.keking.model.collaboration.OnlineUser;
+import cn.keking.model.collaboration.ShareLink;
 import cn.keking.service.cache.CacheService;
 import cn.keking.utils.ConfigUtils;
 import org.rocksdb.RocksDB;
@@ -11,12 +14,15 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @auther: chenjh
@@ -52,6 +58,22 @@ public class CacheServiceRocksDBImpl implements CacheService {
             if (db.get(FILE_PREVIEW_PDF_IMGS_KEY.getBytes()) == null) {
                 Map<String, Integer> initPDFIMGCache = new HashMap<>();
                 db.put(FILE_PREVIEW_PDF_IMGS_KEY.getBytes(), toByteArray(initPDFIMGCache));
+            }
+            if (db.get(COLLAB_SHARE_KEY.getBytes()) == null) {
+                Map<String, ShareLink> initShareCache = new HashMap<>();
+                db.put(COLLAB_SHARE_KEY.getBytes(), toByteArray(initShareCache));
+            }
+            if (db.get(COLLAB_ANNOTATION_KEY.getBytes()) == null) {
+                Map<String, List<Annotation>> initAnnotationCache = new HashMap<>();
+                db.put(COLLAB_ANNOTATION_KEY.getBytes(), toByteArray(initAnnotationCache));
+            }
+            if (db.get(COLLAB_ONLINE_USER_KEY.getBytes()) == null) {
+                Map<String, Set<OnlineUser>> initOnlineUserCache = new HashMap<>();
+                db.put(COLLAB_ONLINE_USER_KEY.getBytes(), toByteArray(initOnlineUserCache));
+            }
+            if (db.get(COLLAB_DOC_LOCK_KEY.getBytes()) == null) {
+                Map<String, String> initDocLockCache = new HashMap<>();
+                db.put(COLLAB_DOC_LOCK_KEY.getBytes(), toByteArray(initDocLockCache));
             }
         } catch (RocksDBException | IOException e) {
             LOGGER.error("Uable to init RocksDB" + e);
@@ -296,17 +318,29 @@ public class CacheServiceRocksDBImpl implements CacheService {
             "java.util.LinkedHashMap",
             "java.util.ArrayList",
             "java.util.LinkedList",
+            "java.util.concurrent.ConcurrentHashMap$KeySetView",
             // Map.Entry
             "java.util.HashMap$Node",
             "java.util.HashMap$Entry",
             // 内部存储类型
             "java.lang.String",
             "java.lang.Integer",
+            "java.lang.Long",
+            "java.lang.Double",
             "[Ljava.lang.String;",  // String数组
             // 可能的其他类型
             "java.util.HashSet",
             "java.util.TreeMap",
-            "java.util.TreeSet"
+            "java.util.TreeSet",
+            // 协作功能模型类
+            "cn.keking.model.collaboration.ShareLink",
+            "cn.keking.model.collaboration.Annotation",
+            "cn.keking.model.collaboration.Annotation$AnnotationReply",
+            "cn.keking.model.collaboration.OnlineUser",
+            "cn.keking.model.collaboration.OnlineUser$CursorPosition",
+            "cn.keking.model.collaboration.CollabOperation",
+            "cn.keking.model.collaboration.CollabOperation$OperationType",
+            "java.time.Instant"
     );
 
     private void cleanPdfCache() throws IOException, RocksDBException {
@@ -327,5 +361,198 @@ public class CacheServiceRocksDBImpl implements CacheService {
     private void cleanMediaConvertCache() throws IOException, RocksDBException {
         Map<String, String> initMediaConvertCache = new HashMap<>();
         db.put(FILE_PREVIEW_MEDIA_CONVERT_KEY.getBytes(), toByteArray(initMediaConvertCache));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void addShareLink(String token, ShareLink link) {
+        try {
+            Map<String, ShareLink> shareLinks = (Map<String, ShareLink>) toObject(db.get(COLLAB_SHARE_KEY.getBytes()));
+            if (shareLinks == null) {
+                shareLinks = new HashMap<>();
+            }
+            shareLinks.put(token, link);
+            db.put(COLLAB_SHARE_KEY.getBytes(), toByteArray(shareLinks));
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Put share link into RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ShareLink getShareLink(String token) {
+        try {
+            Map<String, ShareLink> shareLinks = (Map<String, ShareLink>) toObject(db.get(COLLAB_SHARE_KEY.getBytes()));
+            return shareLinks == null ? null : shareLinks.get(token);
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Get share link from RocksDB Exception", e);
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void removeShareLink(String token) {
+        try {
+            Map<String, ShareLink> shareLinks = (Map<String, ShareLink>) toObject(db.get(COLLAB_SHARE_KEY.getBytes()));
+            if (shareLinks != null) {
+                shareLinks.remove(token);
+                db.put(COLLAB_SHARE_KEY.getBytes(), toByteArray(shareLinks));
+            }
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Remove share link from RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, ShareLink> getAllShareLinks() {
+        try {
+            Map<String, ShareLink> shareLinks = (Map<String, ShareLink>) toObject(db.get(COLLAB_SHARE_KEY.getBytes()));
+            return shareLinks == null ? new HashMap<>() : shareLinks;
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Get all share links from RocksDB Exception", e);
+            return new HashMap<>();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void putAnnotations(String fileKey, List<Annotation> annotations) {
+        try {
+            Map<String, List<Annotation>> annotationsMap = (Map<String, List<Annotation>>) toObject(db.get(COLLAB_ANNOTATION_KEY.getBytes()));
+            if (annotationsMap == null) {
+                annotationsMap = new HashMap<>();
+            }
+            annotationsMap.put(fileKey, annotations);
+            db.put(COLLAB_ANNOTATION_KEY.getBytes(), toByteArray(annotationsMap));
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Put annotations into RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Annotation> getAnnotations(String fileKey) {
+        try {
+            Map<String, List<Annotation>> annotationsMap = (Map<String, List<Annotation>>) toObject(db.get(COLLAB_ANNOTATION_KEY.getBytes()));
+            if (annotationsMap == null) {
+                return Collections.emptyList();
+            }
+            List<Annotation> result = annotationsMap.get(fileKey);
+            return result == null ? Collections.emptyList() : result;
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Get annotations from RocksDB Exception", e);
+            return Collections.emptyList();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void removeAnnotations(String fileKey) {
+        try {
+            Map<String, List<Annotation>> annotationsMap = (Map<String, List<Annotation>>) toObject(db.get(COLLAB_ANNOTATION_KEY.getBytes()));
+            if (annotationsMap != null) {
+                annotationsMap.remove(fileKey);
+                db.put(COLLAB_ANNOTATION_KEY.getBytes(), toByteArray(annotationsMap));
+            }
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Remove annotations from RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void addOnlineUser(String sessionId, OnlineUser user) {
+        try {
+            Map<String, Set<OnlineUser>> onlineUserMap = (Map<String, Set<OnlineUser>>) toObject(db.get(COLLAB_ONLINE_USER_KEY.getBytes()));
+            if (onlineUserMap == null) {
+                onlineUserMap = new HashMap<>();
+            }
+            onlineUserMap.computeIfAbsent(sessionId, k -> ConcurrentHashMap.newKeySet()).add(user);
+            db.put(COLLAB_ONLINE_USER_KEY.getBytes(), toByteArray(onlineUserMap));
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Add online user into RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void removeOnlineUser(String sessionId, String userSessionId) {
+        try {
+            Map<String, Set<OnlineUser>> onlineUserMap = (Map<String, Set<OnlineUser>>) toObject(db.get(COLLAB_ONLINE_USER_KEY.getBytes()));
+            if (onlineUserMap != null) {
+                Set<OnlineUser> users = onlineUserMap.get(sessionId);
+                if (users != null) {
+                    users.removeIf(u -> userSessionId.equals(u.getSessionId()));
+                }
+                db.put(COLLAB_ONLINE_USER_KEY.getBytes(), toByteArray(onlineUserMap));
+            }
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Remove online user from RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Set<OnlineUser> getOnlineUsers(String sessionId) {
+        try {
+            Map<String, Set<OnlineUser>> onlineUserMap = (Map<String, Set<OnlineUser>>) toObject(db.get(COLLAB_ONLINE_USER_KEY.getBytes()));
+            if (onlineUserMap == null) {
+                return Collections.emptySet();
+            }
+            Set<OnlineUser> users = onlineUserMap.get(sessionId);
+            return users == null ? Collections.emptySet() : users;
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Get online users from RocksDB Exception", e);
+            return Collections.emptySet();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean tryLockDocument(String fileKey, String lockOwner, long ttlSeconds) {
+        try {
+            Map<String, String> docLockMap = (Map<String, String>) toObject(db.get(COLLAB_DOC_LOCK_KEY.getBytes()));
+            if (docLockMap == null) {
+                docLockMap = new HashMap<>();
+            }
+            String currentOwner = docLockMap.get(fileKey);
+            if (currentOwner == null || currentOwner.equals(lockOwner)) {
+                docLockMap.put(fileKey, lockOwner);
+                db.put(COLLAB_DOC_LOCK_KEY.getBytes(), toByteArray(docLockMap));
+                return true;
+            }
+            return false;
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Try lock document in RocksDB Exception", e);
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void unlockDocument(String fileKey, String lockOwner) {
+        try {
+            Map<String, String> docLockMap = (Map<String, String>) toObject(db.get(COLLAB_DOC_LOCK_KEY.getBytes()));
+            if (docLockMap != null && lockOwner.equals(docLockMap.get(fileKey))) {
+                docLockMap.remove(fileKey);
+                db.put(COLLAB_DOC_LOCK_KEY.getBytes(), toByteArray(docLockMap));
+            }
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Unlock document in RocksDB Exception", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public String getDocumentLockOwner(String fileKey) {
+        try {
+            Map<String, String> docLockMap = (Map<String, String>) toObject(db.get(COLLAB_DOC_LOCK_KEY.getBytes()));
+            return docLockMap == null ? null : docLockMap.get(fileKey);
+        } catch (RocksDBException | IOException | ClassNotFoundException e) {
+            LOGGER.error("Get document lock owner from RocksDB Exception", e);
+            return null;
+        }
     }
 }

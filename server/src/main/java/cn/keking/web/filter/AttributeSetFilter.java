@@ -56,6 +56,11 @@ public class AttributeSetFilter implements Filter {
         request.setAttribute("isshowkey", ConfigConstants.getisShowKey());
         request.setAttribute("kkkey", ConfigConstants.getKey());
         request.setAttribute("scriptjs", ConfigConstants.getscriptJs());
+
+        // 在线协作功能开关
+        request.setAttribute("collaborationShareEnabled", ConfigConstants.isCollaborationShareEnabled());
+        request.setAttribute("collaborationEditEnabled", ConfigConstants.isCollaborationEditEnabled());
+        request.setAttribute("collaborationAnnotationEnabled", ConfigConstants.isCollaborationAnnotationEnabled());
     }
 
     /**

@@ -162,6 +162,14 @@ public class ConfigConstants {
     public static final String DEFAULT_FTP_USERNAME = null;
 
     // ==================================================
+    // 十三、在线协作功能配置常量
+    // ==================================================
+    public static final String DEFAULT_COLLABORATION_SHARE_ENABLED = "false";
+    public static final String DEFAULT_COLLABORATION_EDIT_ENABLED = "false";
+    public static final String DEFAULT_COLLABORATION_ANNOTATION_ENABLED = "false";
+    public static final String DEFAULT_SHARE_DEFAULT_TTL = "24";
+
+    // ==================================================
     // 配置变量定义区（按功能分类）
     // ==================================================
 
@@ -313,6 +321,14 @@ public class ConfigConstants {
     private static boolean xlsxShowtoolbar;
     private static boolean isShowKey;
     private static boolean scriptJs;
+
+    // ==================================================
+    // 15. 在线协作功能配置变量
+    // ==================================================
+    private static boolean collaborationShareEnabled;
+    private static boolean collaborationEditEnabled;
+    private static boolean collaborationAnnotationEnabled;
+    private static int shareDefaultTtl;
 
     // ==================================================
     // Getter方法（按功能分类）
@@ -929,4 +945,31 @@ public class ConfigConstants {
     @Value("${kk.scriptjs:false}")
     public void setscriptJs(String scriptJs) { setscriptJsValue(Boolean.parseBoolean(scriptJs)); }
     public static void setscriptJsValue(boolean scriptJs) { ConfigConstants.scriptJs = scriptJs; }
+
+    // ==================================================
+    // 15. 在线协作功能配置Setter方法
+    // ==================================================
+    @Value("${collaboration.share.enabled:false}")
+    public void setCollaborationShareEnabled(String collaborationShareEnabled) { setCollaborationShareEnabledValue(Boolean.parseBoolean(collaborationShareEnabled)); }
+    public static void setCollaborationShareEnabledValue(boolean collaborationShareEnabled) { ConfigConstants.collaborationShareEnabled = collaborationShareEnabled; }
+
+    @Value("${collaboration.edit.enabled:false}")
+    public void setCollaborationEditEnabled(String collaborationEditEnabled) { setCollaborationEditEnabledValue(Boolean.parseBoolean(collaborationEditEnabled)); }
+    public static void setCollaborationEditEnabledValue(boolean collaborationEditEnabled) { ConfigConstants.collaborationEditEnabled = collaborationEditEnabled; }
+
+    @Value("${collaboration.annotation.enabled:false}")
+    public void setCollaborationAnnotationEnabled(String collaborationAnnotationEnabled) { setCollaborationAnnotationEnabledValue(Boolean.parseBoolean(collaborationAnnotationEnabled)); }
+    public static void setCollaborationAnnotationEnabledValue(boolean collaborationAnnotationEnabled) { ConfigConstants.collaborationAnnotationEnabled = collaborationAnnotationEnabled; }
+
+    @Value("${collaboration.share.default-ttl-hours:24}")
+    public void setShareDefaultTtl(int shareDefaultTtl) { setShareDefaultTtlValue(shareDefaultTtl); }
+    public static void setShareDefaultTtlValue(int shareDefaultTtl) { ConfigConstants.shareDefaultTtl = shareDefaultTtl; }
+
+    // ==================================================
+    // 15. 在线协作功能配置Getter方法
+    // ==================================================
+    public static boolean isCollaborationShareEnabled() { return collaborationShareEnabled; }
+    public static boolean isCollaborationEditEnabled() { return collaborationEditEnabled; }
+    public static boolean isCollaborationAnnotationEnabled() { return collaborationAnnotationEnabled; }
+    public static int getShareDefaultTtl() { return shareDefaultTtl; }
 }

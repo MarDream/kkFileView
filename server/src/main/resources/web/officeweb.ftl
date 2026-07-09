@@ -377,6 +377,103 @@
     <div id="luckysheet"></div>
 </div>
 
+<#if collaborationEditEnabled!false>
+<!-- 在线用户列表 -->
+<div id="onlineUsers" style="position: fixed; top: 60px; right: 16px; z-index: 1000001; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); width: 150px; display: none;">
+    <div style="font-weight: bold; margin-bottom: 8px;">在线用户</div>
+    <div id="onlineUsersList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+(function() {
+    const fileKey = window.location.href;
+    let stompClient = null;
+    let sessionId = null;
+    let currentUser = null;
+
+    function connectWebSocket() {
+        if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+            console.warn('SockJS/STOMP 客户端未加载，跳过协作连接');
+            return;
+        }
+        const socket = new SockJS('/ws-collab');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect({}, function(frame) {
+            console.log('已连接到协作服务');
+            const usersBox = document.getElementById('onlineUsers');
+            if (usersBox) usersBox.style.display = 'block';
+
+            fetch('/api/collab/session?fileKey=' + encodeURIComponent(fileKey), {method: 'POST'})
+                .then(res => res.json())
+                .then(data => {
+                    sessionId = data.sessionId;
+                    stompClient.subscribe('/topic/presence/' + sessionId, function(message) {
+                        const payload = JSON.parse(message.body);
+                        updateOnlineUsers(payload.onlineUsers || []);
+                    });
+                    stompClient.subscribe('/topic/session/' + sessionId, function(message) {
+                        const payload = JSON.parse(message.body);
+                        handleCollabOperation(payload);
+                    });
+
+                    currentUser = {
+                        nickname: '用户' + Math.floor(Math.random() * 1000),
+                        color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+                    };
+                    stompClient.send('/app/join/' + sessionId, {}, JSON.stringify(currentUser));
+                })
+                .catch(err => console.error('创建协作会话失败:', err));
+        }, function(error) {
+            console.error('WebSocket 连接失败:', error);
+        });
+    }
+
+    function updateOnlineUsers(users) {
+        const usersList = document.getElementById('onlineUsersList');
+        if (!usersList) return;
+        usersList.innerHTML = '';
+        users.forEach(function(user) {
+            const div = document.createElement('div');
+            div.style.margin = '4px 0';
+            div.innerHTML = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + (user.color || '#999') + ';margin-right:5px;"></span>' + (user.nickname || '匿名');
+            usersList.appendChild(div);
+        });
+    }
+
+    function handleCollabOperation(operation) {
+        if (!operation || !window.luckysheet) return;
+        // 将远程单元格编辑操作应用到 Luckysheet
+        if (operation.type === 'CELL_UPDATE' && operation.cellRange) {
+            try {
+                const range = operation.cellRange;
+                window.luckysheet.setCellValue(range.row, range.column, operation.content);
+            } catch (e) {
+                console.warn('应用协作操作失败:', e);
+            }
+        }
+    }
+
+    window.addEventListener('beforeunload', function() {
+        if (stompClient && stompClient.connected && sessionId && currentUser) {
+            try {
+                stompClient.send('/app/leave/' + sessionId, {}, JSON.stringify(currentUser));
+            } catch (e) { /* ignore */ }
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', connectWebSocket);
+    } else {
+        connectWebSocket();
+    }
+})();
+</script>
+</#if>
+
 <script src="xlsx/luckyexcel.umd.js"></script>
 <script>
     var url = '${finalUrl}';

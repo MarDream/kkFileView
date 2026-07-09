@@ -104,4 +104,21 @@ public class WebConfig implements WebMvcConfigurer {
         registrationBean.setUrlPatterns(filterUri);
         return registrationBean;
     }
+
+    private final ShareAccessFilter shareAccessFilter;
+
+    public WebConfig(ShareAccessFilter shareAccessFilter) {
+        this.shareAccessFilter = shareAccessFilter;
+    }
+
+    @Bean
+    public FilterRegistrationBean<ShareAccessFilter> getShareAccessFilter() {
+        Set<String> filterUri = new HashSet<>();
+        filterUri.add("/share/*");
+        FilterRegistrationBean<ShareAccessFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(shareAccessFilter);
+        registrationBean.setUrlPatterns(filterUri);
+        registrationBean.setOrder(5);
+        return registrationBean;
+    }
 }
