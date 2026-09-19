@@ -12,8 +12,8 @@ kkFileView 是一个基于 Spring Boot 4.0.6 + Freemarker 的文件在线预览�
 # 构建 jar（跳过测试）
 mvn -q -pl server -DskipTests package
 
-# 开发模式（热重载，修改模板/CSS/JS 后即时生效）
-./server/src/main/bin/dev.sh
+# 开发模式（热重载）
+mvn -pl server spring-boot:run
 
 # 运行指定单元测试
 mvn -q -pl server -Dtest=PdfViewerCompatibilityTests test
@@ -22,10 +22,10 @@ mvn -q -pl server -Dtest=PdfViewerCompatibilityTests test
 mvn -B package -Dmaven.test.skip=true --file pom.xml
 
 # 生产启动（Linux）
-./server/src/main/bin/startup.sh
+./scripts/startup.sh
 
-# 生产启动（Windows）
-server\src\main\bin\startup.bat
+# 生产启动（Windows，本机脚本，含 KK_OFFICE_HOME 等环境变量）
+scripts\start-bg.bat
 
 # 构建 Docker 容器镜像（默认 Dockerfile.standalone，推荐）
 ./scripts/build-docker.sh 5.0.1
@@ -100,8 +100,8 @@ Request → OnlinePreviewController
 | `cache.type` | 缓存实现（`jdk`/`redis`/`default`） | `jdk` |
 | `file.upload.disable` | 禁用首页文件上传 | `true` |
 | `base.url` | 反向代理时的服务地址 | 从请求读取 |
-
-安全相关：详见 `SECURITY_CONFIG.md`。黑名单优先级高于白名单。
+| `collaboration.edit.enabled` / `collaboration.annotation.enabled` | 在线协作功能开关（默认关闭） | `false` |
+| `collaboration.ws.allowed-origins` | 协作 WebSocket 来源白名单（`*` 允许任意来源，生产建议收紧） | `*` |
 
 ## Key Conventions
 
@@ -109,16 +109,8 @@ Request → OnlinePreviewController
 - Office 文件可渲染为 `pdf` 模式或 `image` 模式，两者使用不同模板
 - 压缩包预览涉及目录树生成 + 解压到磁盘 + 嵌套预览 URL 构建 + iframe 加载，调试时从磁盘文件完整性开始排查
 - 修改默认值时需区分：本地开发 / 仓库默认配置 / 部署服务器配置 / query-param 覆盖
-- 生产环境 `startup.bat` 中的配置文件路径可能与仓库默认不同
-
-## E2E Tests
-
-Playwright 测试位于 `tests/e2e/`，CI 工作流：
-- `pr-e2e-mvp.yml`：PR 时运行
-- `nightly-e2e.yml`：每夜回归
+- 生产环境 `scripts/start-bg.bat` 中的配置文件路径可能与仓库默认不同
 
 ## CI/CD
 
-- `maven.yml`：master push 和 PR 触发构建
-- `master-auto-deploy.yml`：master push 自动部署到 Windows 生产服务器（WinRM）
-- 脚本：`.github/scripts/remote_windows_deploy.ps1`
+当前仓库不含 `.github/workflows`（历史 CI 工作流已移除），构建与部署均为手动执行。
