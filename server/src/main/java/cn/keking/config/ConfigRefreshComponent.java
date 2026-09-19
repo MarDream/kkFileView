@@ -282,6 +282,7 @@ public class ConfigRefreshComponent {
         ConfigConstants.setCollaborationEditEnabledValue(Boolean.parseBoolean(getProperty(properties, "collaboration.edit.enabled", ConfigConstants.DEFAULT_COLLABORATION_EDIT_ENABLED)));
         ConfigConstants.setCollaborationAnnotationEnabledValue(Boolean.parseBoolean(getProperty(properties, "collaboration.annotation.enabled", ConfigConstants.DEFAULT_COLLABORATION_ANNOTATION_ENABLED)));
         ConfigConstants.setShareDefaultTtlValue(Integer.parseInt(getProperty(properties, "collaboration.share.default-ttl-hours", ConfigConstants.DEFAULT_SHARE_DEFAULT_TTL)));
+        ConfigConstants.setCollabWsAllowedOriginsValue(getProperty(properties, "collaboration.ws.allowed-origins", ConfigConstants.DEFAULT_COLLAB_WS_ALLOWED_ORIGINS));
     }
 
     private String getProperty(Properties properties, String key, String defaultValue) {

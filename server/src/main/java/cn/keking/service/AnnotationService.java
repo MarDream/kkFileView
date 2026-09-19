@@ -59,27 +59,6 @@ public class AnnotationService {
     }
 
     /**
-     * 添加单条批注
-     */
-    public Annotation addAnnotation(String fileKey, Annotation annotation) {
-        if (fileKey == null || fileKey.trim().isEmpty()) {
-            return null;
-        }
-
-        List<Annotation> annotations = cacheService.getAnnotations(fileKey);
-        if (annotations == null) {
-            annotations = new ArrayList<>();
-        }
-
-        annotation.setId(UUID.randomUUID().toString());
-        annotations.add(annotation);
-
-        cacheService.putAnnotations(fileKey, annotations);
-        LOGGER.info("添加批注: fileKey={}, id={}", fileKey, annotation.getId());
-        return annotation;
-    }
-
-    /**
      * 删除单条批注
      */
     public void deleteAnnotation(String fileKey, String annotationId) {
@@ -95,37 +74,5 @@ public class AnnotationService {
         annotations.removeIf(a -> annotationId.equals(a.getId()));
         cacheService.putAnnotations(fileKey, annotations);
         LOGGER.info("删除批注: fileKey={}, id={}", fileKey, annotationId);
-    }
-
-    /**
-     * 添加批注回复
-     */
-    public void addReply(String fileKey, String annotationId, Annotation.AnnotationReply reply) {
-        if (fileKey == null || fileKey.trim().isEmpty()) {
-            return;
-        }
-
-        List<Annotation> annotations = cacheService.getAnnotations(fileKey);
-        if (annotations == null) {
-            return;
-        }
-
-        for (Annotation annotation : annotations) {
-            if (annotationId.equals(annotation.getId())) {
-                reply.setId(UUID.randomUUID().toString());
-                annotation.addReply(reply);
-                cacheService.putAnnotations(fileKey, annotations);
-                LOGGER.info("添加批注回复: fileKey={}, annotationId={}", fileKey, annotationId);
-                return;
-            }
-        }
-    }
-
-    /**
-     * 删除文件的所有批注
-     */
-    public void deleteAllAnnotations(String fileKey) {
-        cacheService.removeAnnotations(fileKey);
-        LOGGER.info("删除所有批注: fileKey={}", fileKey);
     }
 }

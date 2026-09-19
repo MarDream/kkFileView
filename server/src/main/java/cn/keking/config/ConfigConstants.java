@@ -168,6 +168,7 @@ public class ConfigConstants {
     public static final String DEFAULT_COLLABORATION_EDIT_ENABLED = "false";
     public static final String DEFAULT_COLLABORATION_ANNOTATION_ENABLED = "false";
     public static final String DEFAULT_SHARE_DEFAULT_TTL = "24";
+    public static final String DEFAULT_COLLAB_WS_ALLOWED_ORIGINS = "*";
 
     // ==================================================
     // 配置变量定义区（按功能分类）
@@ -329,6 +330,7 @@ public class ConfigConstants {
     private static boolean collaborationEditEnabled;
     private static boolean collaborationAnnotationEnabled;
     private static int shareDefaultTtl;
+    private static String collabWsAllowedOrigins;
 
     // ==================================================
     // Getter方法（按功能分类）
@@ -965,11 +967,16 @@ public class ConfigConstants {
     public void setShareDefaultTtl(int shareDefaultTtl) { setShareDefaultTtlValue(shareDefaultTtl); }
     public static void setShareDefaultTtlValue(int shareDefaultTtl) { ConfigConstants.shareDefaultTtl = shareDefaultTtl; }
 
+    @Value("${collaboration.ws.allowed-origins:*}")
+    public void setCollabWsAllowedOrigins(String collabWsAllowedOrigins) { setCollabWsAllowedOriginsValue(collabWsAllowedOrigins); }
+    public static void setCollabWsAllowedOriginsValue(String collabWsAllowedOrigins) { ConfigConstants.collabWsAllowedOrigins = collabWsAllowedOrigins; }
+
     // ==================================================
-    // 15. 在线协作功能配置Getter方法
+    // 16. 在线协作功能配置Getter方法
     // ==================================================
     public static boolean isCollaborationShareEnabled() { return collaborationShareEnabled; }
     public static boolean isCollaborationEditEnabled() { return collaborationEditEnabled; }
     public static boolean isCollaborationAnnotationEnabled() { return collaborationAnnotationEnabled; }
     public static int getShareDefaultTtl() { return shareDefaultTtl; }
+    public static String getCollabWsAllowedOrigins() { return collabWsAllowedOrigins; }
 }

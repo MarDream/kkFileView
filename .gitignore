@@ -37,3 +37,4 @@ log/
 *.pyo
 start-claude.bat
 /.mvn
+server.log

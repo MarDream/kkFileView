@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -73,10 +72,9 @@ public class ShareService {
     }
 
     /**
-     * 验证分享密码
+     * 验证分享密码（接收调用方已查得的 ShareLink，避免同一请求重复读缓存）
      */
-    public boolean verifyPassword(String token, String password) {
-        ShareLink link = getShareLink(token);
+    public boolean verifyPassword(ShareLink link, String password) {
         if (link == null) {
             return false;
         }
@@ -89,17 +87,10 @@ public class ShareService {
     }
 
     /**
-     * 删除分享链接
+     * 按文件 URL 查找"未过期且设置了密码"的分享链接（找不到返回 null），
+     * 供 ShareProtectFilter 判断直接访问 /onlinePreview 是否需要补密码验证
      */
-    public void deleteShareLink(String token) {
-        cacheService.removeShareLink(token);
-        LOGGER.info("删除分享链接: token={}", token);
-    }
-
-    /**
-     * 获取所有分享链接
-     */
-    public Map<String, ShareLink> getAllShareLinks() {
-        return cacheService.getAllShareLinks();
+    public ShareLink findProtectedShareLink(String fileUrl) {
+        return cacheService.findShareLinkByFileUrl(fileUrl);
     }
 }

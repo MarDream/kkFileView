@@ -56,9 +56,6 @@
             <div class="slide-img-container">
                 <div class="ppt-turn-left-mask"></div>
                 <div class="ppt-turn-right-mask"></div>
-                <!--
-                <img src="" class="img-polaroid" style="max-height: 100%;">
-                 -->
             </div>
             <!-- ONLY AVAILABLE ON MOBILE -->
             <div class="span12 visible-phone text-center"
@@ -74,18 +71,6 @@
 <div class="progress progress-striped active bottom-paging-progress">
     <div class="bar" style="width: 0%;"></div>
 </div>
-
-<#if collaborationAnnotationEnabled!false>
-<!-- 批注工具栏 -->
-<div id="annotationToolbar" style="position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10000; background: white; padding: 8px 16px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); display: none;">
-    <button class="anno-tool" data-tool="highlight" style="padding: 6px 12px; margin-right: 8px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px;">高亮</button>
-    <button class="anno-tool" data-tool="underline" style="padding: 6px 12px; margin-right: 8px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px;">下划线</button>
-    <button class="anno-tool" data-tool="text" style="padding: 6px 12px; margin-right: 8px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px;">文本批注</button>
-    <button class="anno-tool" data-tool="draw" style="padding: 6px 12px; margin-right: 8px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px;">自由绘制</button>
-    <button id="toggleAnnotations" style="padding: 6px 12px; margin-right: 8px; border: 1px solid #007bff; background: #007bff; color: white; cursor: pointer; border-radius: 4px;">显示批注</button>
-</div>
-<canvas id="annotationCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;"></canvas>
-</#if>
 
 <!-- JavaSript ================================================== -->
 <script src="js/jquery-3.6.1.min.js"></script>
@@ -148,119 +133,35 @@
     window.onload = function () {
         initWaterMark();
     }
-
-    <#if collaborationAnnotationEnabled!false>
-    // PPT 批注功能
-    (function() {
-        const canvas = document.getElementById('annotationCanvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const toolbar = document.getElementById('annotationToolbar');
-        let currentTool = null;
-        let isDrawing = false;
-        let annotations = [];
-        let fileKey = window.location.href;
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = document.documentElement.scrollHeight;
-            redrawAnnotations();
-        }
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(() => { toolbar.style.display = 'block'; resizeCanvas(); }, 2000);
-
-        document.querySelectorAll('.anno-tool').forEach(btn => {
-            btn.addEventListener('click', function() {
-                currentTool = this.dataset.tool;
-                canvas.style.pointerEvents = 'auto';
-                document.querySelectorAll('.anno-tool').forEach(b => b.style.background = 'white');
-                this.style.background = '#e0e0e0';
-            });
-        });
-
-        document.getElementById('toggleAnnotations').addEventListener('click', async function() {
-            if (annotations.length === 0) await loadAnnotations();
-            else redrawAnnotations();
-        });
-
-        canvas.addEventListener('mousedown', function(e) {
-            if (!currentTool) return;
-            isDrawing = true;
-            this.startX = e.clientX + window.scrollX;
-            this.startY = e.clientY + window.scrollY;
-        });
-
-        canvas.addEventListener('mouseup', async function(e) {
-            if (!isDrawing || !currentTool) return;
-            isDrawing = false;
-            const endX = e.clientX + window.scrollX;
-            const endY = e.clientY + window.scrollY;
-            const annotation = {
-                id: Date.now().toString(),
-                fileKey: fileKey,
-                page: 1,
-                x: this.startX,
-                y: this.startY,
-                width: endX - this.startX,
-                height: endY - this.startY,
-                content: '',
-                authorName: '匿名用户',
-                color: currentTool === 'highlight' ? '#ffff00' : '#ff0000',
-                createdAt: new Date().toISOString()
-            };
-            if (currentTool === 'text') {
-                const content = prompt('请输入批注内容:');
-                if (!content) return;
-                annotation.content = content;
-            }
-            annotations.push(annotation);
-            redrawAnnotations();
-            await saveAnnotations();
-        });
-
-        function redrawAnnotations() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            annotations.forEach(anno => {
-                ctx.fillStyle = anno.color || '#ffff00';
-                ctx.globalAlpha = 0.3;
-                ctx.fillRect(anno.x, anno.y, anno.width, anno.height);
-                if (anno.content) {
-                    ctx.fillStyle = '#000';
-                    ctx.globalAlpha = 1;
-                    ctx.font = '12px sans-serif';
-                    ctx.fillText(anno.content, anno.x, anno.y - 5);
-                }
-            });
-        }
-
-        async function loadAnnotations() {
-            try {
-                const response = await fetch('/api/annotation/list?fileKey=' + encodeURIComponent(fileKey));
-                if (response.ok) {
-                    const data = await response.json();
-                    annotations = data || [];
-                    redrawAnnotations();
-                }
-            } catch (err) {
-                console.error('加载批注失败:', err);
-            }
-        }
-
-        async function saveAnnotations() {
-            try {
-                await fetch('/api/annotation/save', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({fileKey: fileKey, annotations: annotations})
-                });
-            } catch (err) {
-                console.error('保存批注失败:', err);
-            }
-        }
-
-        loadAnnotations();
-    })();
-    </#if>
 </script>
+
+<#-- 在线批注：工具栏与画布由 collab-annotation.js 注入。
+     ppt.js 为单页轮播：DOM 中仅一个 .slide-img-container，切页时替换内部图片，
+     故画布锚定该容器，页码接入 ppt.js 的真实当前页变量 curSlide，
+     翻页后组件经周期性签名比对更新页码并重绘当前页批注 -->
+<#if collaborationAnnotationEnabled!false>
+    <link rel="stylesheet" href="/css/collab.css"/>
+    <script src="/js/collab-annotation.js"></script>
+    <script>
+        initCollabAnnotation({
+            fileKey: window.location.href,
+            // 单页轮播：返回当前可见容器与真实页码（ppt.js 暴露全局 getCurSlide/curSlide）
+            getPageElements: function () {
+                var container = document.querySelector('.slide-img-container');
+                if (!container) {
+                    return [];
+                }
+                var page = 1;
+                if (typeof getCurSlide === 'function') {
+                    page = getCurSlide();
+                } else if (window.curSlide) {
+                    page = window.curSlide;
+                }
+                return [{ el: container, pageNumber: page }];
+            },
+            showDelay: 2000
+        });
+    </script>
+</#if>
 </body>
 </html>

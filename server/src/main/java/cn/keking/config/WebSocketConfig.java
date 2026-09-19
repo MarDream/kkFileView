@@ -30,8 +30,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // STOMP 端点，使用 SockJS 作为回退
+        // 来源白名单可配置（逗号分隔，默认 * 兼容所有来源，生产建议收紧）
         registry.addEndpoint("/ws-collab")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(ConfigConstants.getCollabWsAllowedOrigins().split(","))
                 .withSockJS();
     }
 }

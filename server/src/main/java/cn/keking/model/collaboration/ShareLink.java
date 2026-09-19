@@ -1,5 +1,6 @@
 package cn.keking.model.collaboration;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 /**
@@ -7,14 +8,16 @@ import java.time.Instant;
  *
  * @author Claude Code
  */
-public class ShareLink {
+public class ShareLink implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private String token;
     private String fileUrl;
     private String fileName;
     private String password;
     private Instant createdAt;
     private Instant expireAt;
-    private String creatorId;
 
     public ShareLink() {
         this.createdAt = Instant.now();
@@ -66,14 +69,6 @@ public class ShareLink {
 
     public void setExpireAt(Instant expireAt) {
         this.expireAt = expireAt;
-    }
-
-    public String getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
     }
 
     public boolean isExpired() {

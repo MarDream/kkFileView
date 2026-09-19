@@ -4,7 +4,6 @@ import cn.keking.model.collaboration.Annotation;
 import cn.keking.model.collaboration.OnlineUser;
 import cn.keking.model.collaboration.ShareLink;
 import cn.keking.service.cache.CacheService;
-import org.redisson.api.RBucket;
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RSet;
@@ -175,11 +174,6 @@ public class CacheServiceRedisImpl implements CacheService {
     }
 
     @Override
-    public Map<String, ShareLink> getAllShareLinks() {
-        return redissonClient.getMapCache(COLLAB_SHARE_KEY);
-    }
-
-    @Override
     public void putAnnotations(String fileKey, List<Annotation> annotations) {
         RMapCache<String, List<Annotation>> annotationsMap = redissonClient.getMapCache(COLLAB_ANNOTATION_KEY);
         annotationsMap.put(fileKey, annotations);
@@ -190,12 +184,6 @@ public class CacheServiceRedisImpl implements CacheService {
         RMapCache<String, List<Annotation>> annotationsMap = redissonClient.getMapCache(COLLAB_ANNOTATION_KEY);
         List<Annotation> result = annotationsMap.get(fileKey);
         return result == null ? Collections.emptyList() : result;
-    }
-
-    @Override
-    public void removeAnnotations(String fileKey) {
-        RMapCache<String, List<Annotation>> annotationsMap = redissonClient.getMapCache(COLLAB_ANNOTATION_KEY);
-        annotationsMap.remove(fileKey);
     }
 
     @Override
@@ -217,28 +205,33 @@ public class CacheServiceRedisImpl implements CacheService {
     }
 
     @Override
-    public boolean tryLockDocument(String fileKey, String lockOwner, long ttlSeconds) {
-        RBucket<String> lockBucket = redissonClient.getBucket(COLLAB_DOC_LOCK_KEY + ":" + fileKey);
-        String currentOwner = lockBucket.get();
-        if (currentOwner == null || currentOwner.equals(lockOwner)) {
-            lockBucket.set(lockOwner, ttlSeconds, TimeUnit.SECONDS);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void unlockDocument(String fileKey, String lockOwner) {
-        RBucket<String> lockBucket = redissonClient.getBucket(COLLAB_DOC_LOCK_KEY + ":" + fileKey);
-        String currentOwner = lockBucket.get();
-        if (lockOwner.equals(currentOwner)) {
-            lockBucket.delete();
+    public void refreshOnlineUser(String sessionId, String userSessionId) {
+        RSet<OnlineUser> users = redissonClient.getSet(COLLAB_ONLINE_USER_KEY + ":" + sessionId);
+        for (OnlineUser user : users.readAll()) {
+            if (!userSessionId.equals(user.getSessionId())) {
+                continue;
+            }
+            // Redisson Set 存储的是序列化值副本（readAll 返回的是拷贝对象），
+            // 且 OnlineUser 未重写 equals，lastActiveAt 变化后直接 add 会被视为新元素，
+            // 必须先按 userSessionId 移除旧值再写回，否则集合中会出现重复用户
+            user.setLastActiveAt(java.time.Instant.now());
+            users.removeIf(u -> userSessionId.equals(u.getSessionId()));
+            users.add(user);
+            break;
         }
     }
 
     @Override
-    public String getDocumentLockOwner(String fileKey) {
-        RBucket<String> lockBucket = redissonClient.getBucket(COLLAB_DOC_LOCK_KEY + ":" + fileKey);
-        return lockBucket.get();
+    public ShareLink findShareLinkByFileUrl(String fileUrl) {
+        RMapCache<String, ShareLink> shareLinks = redissonClient.getMapCache(COLLAB_SHARE_KEY);
+        // 分享链接数量级有限（每条分享一个 token），readAllValues 全量遍历可接受，
+        // 过期条目由 Redis TTL 兜底淘汰，此处再以 isExpired 双重保险
+        for (ShareLink link : shareLinks.readAllValues()) {
+            if (!link.isExpired() && link.hasPassword()
+                    && fileUrl.equals(link.getFileUrl())) {
+                return link;
+            }
+        }
+        return null;
     }
 }

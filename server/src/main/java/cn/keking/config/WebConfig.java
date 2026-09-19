@@ -1,5 +1,6 @@
 package cn.keking.config;
 
+import cn.keking.service.ShareService;
 import cn.keking.web.filter.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,6 +8,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -21,6 +23,13 @@ import java.util.Set;
 public class WebConfig implements WebMvcConfigurer {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(WebConfig.class);
+
+    private final ShareService shareService;
+
+    public WebConfig(ShareService shareService) {
+        this.shareService = shareService;
+    }
+
     /**
      * 访问外部文件配置
      */
@@ -35,6 +44,14 @@ public class WebConfig implements WebMvcConfigurer {
                 .resourceChain(true);
     }
 
+    /**
+     * 注册在线协作功能拦截器（按路径前缀校验协作子功能开关）
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new CollaborationInterceptor())
+                .addPathPatterns("/api/annotation/**", "/api/share/**", "/api/collab/**");
+    }
 
     @Bean
     public FilterRegistrationBean<ChinesePathFilter> getChinesePathFilter() {
@@ -105,20 +122,32 @@ public class WebConfig implements WebMvcConfigurer {
         return registrationBean;
     }
 
-    private final ShareAccessFilter shareAccessFilter;
-
-    public WebConfig(ShareAccessFilter shareAccessFilter) {
-        this.shareAccessFilter = shareAccessFilter;
-    }
-
     @Bean
     public FilterRegistrationBean<ShareAccessFilter> getShareAccessFilter() {
         Set<String> filterUri = new HashSet<>();
         filterUri.add("/share/*");
+        ShareAccessFilter filter = new ShareAccessFilter(shareService);
         FilterRegistrationBean<ShareAccessFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(shareAccessFilter);
+        registrationBean.setFilter(filter);
         registrationBean.setUrlPatterns(filterUri);
         registrationBean.setOrder(5);
+        return registrationBean;
+    }
+
+    /**
+     * 带密码分享的预览防护：拦截文件预览入口，防止知道文件原始 URL 时绕过分享密码
+     * （注册在 ShareAccessFilter(order=5) 之后，仅作用于直接访问预览页的请求）
+     */
+    @Bean
+    public FilterRegistrationBean<ShareProtectFilter> getShareProtectFilter() {
+        Set<String> filterUri = new HashSet<>();
+        filterUri.add("/onlinePreview");
+        filterUri.add("/picturesPreview");
+        ShareProtectFilter filter = new ShareProtectFilter(shareService);
+        FilterRegistrationBean<ShareProtectFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(filter);
+        registrationBean.setUrlPatterns(filterUri);
+        registrationBean.setOrder(6);
         return registrationBean;
     }
 }

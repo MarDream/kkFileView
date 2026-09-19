@@ -1,5 +1,6 @@
 package cn.keking.model.collaboration;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 /**
@@ -7,12 +8,16 @@ import java.time.Instant;
  *
  * @author Claude Code
  */
-public class OnlineUser {
+public class OnlineUser implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private String sessionId;
     private String nickname;
     private String color;
     private Instant joinedAt;
-    private CursorPosition cursorPosition;
+    /** 最近活跃时间，用于超时清扫（断网/杀进程等未发 leave 消息场景下的幽灵用户判定） */
+    private Instant lastActiveAt;
 
     public OnlineUser() {
         this.joinedAt = Instant.now();
@@ -50,53 +55,11 @@ public class OnlineUser {
         this.joinedAt = joinedAt;
     }
 
-    public CursorPosition getCursorPosition() {
-        return cursorPosition;
+    public Instant getLastActiveAt() {
+        return lastActiveAt;
     }
 
-    public void setCursorPosition(CursorPosition cursorPosition) {
-        this.cursorPosition = cursorPosition;
-    }
-
-    /**
-     * 光标位置
-     */
-    public static class CursorPosition {
-        private int page;
-        private double x;
-        private double y;
-
-        public CursorPosition() {
-        }
-
-        public CursorPosition(int page, double x, double y) {
-            this.page = page;
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getPage() {
-            return page;
-        }
-
-        public void setPage(int page) {
-            this.page = page;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public void setX(double x) {
-            this.x = x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public void setY(double y) {
-            this.y = y;
-        }
+    public void setLastActiveAt(Instant lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
     }
 }

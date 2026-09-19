@@ -44,14 +44,20 @@ RUN tar -xzf /tmp/kkFileView.tar.gz -C /opt && \
 # 注意：不能用 zip -j（会丢掉路径），必须保留完整路径 BOOT-INF/classes/web/pdf.ftl
 #      才能覆盖 jar 内的同路径文件
 COPY scripts/pdf-direct.ftl /tmp/pdf-direct.ftl
+# 替换 jar 内的 commonHeader.ftl：修复协作分享脚本块未用 <#noparse> 包裹导致
+# FreeMarker 把 JS 的 || 和 ${} 模板字符串当作 FTL 语法解析，报 ParseException，
+# 进而使所有 office 预览（docx/xlsx/pptx 转 pdf）全部 500 失败。
+COPY server/src/main/resources/web/commonHeader.ftl /tmp/commonHeader.ftl
 RUN cd /opt/kkFileView-${KKFILEVIEW_VERSION}/bin && \
     mkdir -p /tmp/ftl-extract/BOOT-INF/classes/web && \
     unzip -o kkFileView-${KKFILEVIEW_VERSION}.jar BOOT-INF/classes/web/pdf.ftl -d /tmp/ftl-extract && \
     cp /tmp/pdf-direct.ftl /tmp/ftl-extract/BOOT-INF/classes/web/pdf.ftl && \
+    cp /tmp/commonHeader.ftl /tmp/ftl-extract/BOOT-INF/classes/web/commonHeader.ftl && \
     cd /tmp/ftl-extract && \
     zip /opt/kkFileView-${KKFILEVIEW_VERSION}/bin/kkFileView-${KKFILEVIEW_VERSION}.jar \
-        BOOT-INF/classes/web/pdf.ftl && \
-    rm -rf /tmp/ftl-extract /tmp/pdf-direct.ftl
+        BOOT-INF/classes/web/pdf.ftl \
+        BOOT-INF/classes/web/commonHeader.ftl && \
+    rm -rf /tmp/ftl-extract /tmp/pdf-direct.ftl /tmp/commonHeader.ftl
 
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

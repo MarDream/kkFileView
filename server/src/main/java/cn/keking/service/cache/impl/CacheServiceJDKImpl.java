@@ -37,7 +37,6 @@ public class CacheServiceJDKImpl implements CacheService {
     private final Map<String, ShareLink> shareLinkCache = new ConcurrentHashMap<>();
     private final Map<String, List<Annotation>> annotationCache = new ConcurrentHashMap<>();
     private final Map<String, Set<OnlineUser>> onlineUserCache = new ConcurrentHashMap<>();
-    private final Map<String, String> docLockCache = new ConcurrentHashMap<>();
     private static final int QUEUE_SIZE = 500000;
     private final BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 
@@ -169,11 +168,6 @@ public class CacheServiceJDKImpl implements CacheService {
     }
 
     @Override
-    public Map<String, ShareLink> getAllShareLinks() {
-        return Collections.unmodifiableMap(shareLinkCache);
-    }
-
-    @Override
     public void putAnnotations(String fileKey, List<Annotation> annotations) {
         annotationCache.put(fileKey, annotations);
     }
@@ -181,11 +175,6 @@ public class CacheServiceJDKImpl implements CacheService {
     @Override
     public List<Annotation> getAnnotations(String fileKey) {
         return annotationCache.getOrDefault(fileKey, Collections.emptyList());
-    }
-
-    @Override
-    public void removeAnnotations(String fileKey) {
-        annotationCache.remove(fileKey);
     }
 
     @Override
@@ -207,26 +196,30 @@ public class CacheServiceJDKImpl implements CacheService {
     }
 
     @Override
-    public boolean tryLockDocument(String fileKey, String lockOwner, long ttlSeconds) {
-        String currentOwner = docLockCache.get(fileKey);
-        if (currentOwner == null || currentOwner.equals(lockOwner)) {
-            docLockCache.put(fileKey, lockOwner);
-            return true;
+    public void refreshOnlineUser(String sessionId, String userSessionId) {
+        Set<OnlineUser> users = onlineUserCache.get(sessionId);
+        if (users == null) {
+            return;
         }
-        return false;
-    }
-
-    @Override
-    public void unlockDocument(String fileKey, String lockOwner) {
-        String currentOwner = docLockCache.get(fileKey);
-        if (lockOwner.equals(currentOwner)) {
-            docLockCache.remove(fileKey);
+        // JDK 缓存中的对象为活引用，直接原地更新 lastActiveAt 即可
+        for (OnlineUser user : users) {
+            if (userSessionId.equals(user.getSessionId())) {
+                user.setLastActiveAt(java.time.Instant.now());
+                break;
+            }
         }
     }
 
     @Override
-    public String getDocumentLockOwner(String fileKey) {
-        return docLockCache.get(fileKey);
+    public ShareLink findShareLinkByFileUrl(String fileUrl) {
+        // 分享链接数量级有限（每条分享一个 token），遍历 values 可接受
+        for (ShareLink link : shareLinkCache.values()) {
+            if (!link.isExpired() && link.hasPassword()
+                    && fileUrl.equals(link.getFileUrl())) {
+                return link;
+            }
+        }
+        return null;
     }
 
 }

@@ -24,13 +24,11 @@ public interface CacheService {
     String COLLAB_SHARE_KEY = "collab-share-link";
     String COLLAB_ANNOTATION_KEY = "collab-annotation";
     String COLLAB_ONLINE_USER_KEY = "collab-online-user";
-    String COLLAB_DOC_LOCK_KEY = "collab-doc-lock";
 
     Integer DEFAULT_PDF_CAPACITY = 500000;
     Integer DEFAULT_IMG_CAPACITY = 500000;
     Integer DEFAULT_PDFIMG_CAPACITY = 500000;
     Integer DEFAULT_MEDIACONVERT_CAPACITY = 500000;
-    Integer DEFAULT_COLLAB_CAPACITY = 100000;
 
     void initPDFCachePool(Integer capacity);
     void initIMGCachePool(Integer capacity);
@@ -55,20 +53,25 @@ public interface CacheService {
     void addShareLink(String token, ShareLink link);
     ShareLink getShareLink(String token);
     void removeShareLink(String token);
-    Map<String, ShareLink> getAllShareLinks();
 
     // 批注缓存
     void putAnnotations(String fileKey, List<Annotation> annotations);
     List<Annotation> getAnnotations(String fileKey);
-    void removeAnnotations(String fileKey);
 
     // 在线用户缓存
     void addOnlineUser(String sessionId, OnlineUser user);
     void removeOnlineUser(String sessionId, String userSessionId);
     Set<OnlineUser> getOnlineUsers(String sessionId);
 
-    // 文档锁
-    boolean tryLockDocument(String fileKey, String lockOwner, long ttlSeconds);
-    void unlockDocument(String fileKey, String lockOwner);
-    String getDocumentLockOwner(String fileKey);
+    /**
+     * 刷新指定在线用户的最近活跃时间为当前时间（用户不存在时静默忽略），
+     * 供心跳机制与超时清扫判断幽灵用户
+     */
+    void refreshOnlineUser(String sessionId, String userSessionId);
+
+    /**
+     * 按文件 URL 查找"未过期且设置了密码"的分享链接（找不到返回 null）。
+     * 分享链接数量级有限（每条分享一个 token），全量遍历可接受
+     */
+    ShareLink findShareLinkByFileUrl(String fileUrl);
 }
